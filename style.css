@@ -488,11 +488,13 @@
   .carousel-nav.prev[data-for="background"],
   .carousel-nav.prev[data-for="mech"] {
     left: 0.5rem;
+    z-index: 100;
   }
   
   .carousel-nav.next[data-for="background"],
   .carousel-nav.next[data-for="mech"] {
     right: 0.5rem;
+    z-index: 100;
   }
   
   .carousel-nav:disabled {
