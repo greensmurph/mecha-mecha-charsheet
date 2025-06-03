@@ -437,6 +437,7 @@ function loadFromLocalStorage() {
 
 // 12. Initial render when the page loads
 window.addEventListener('DOMContentLoaded', () => {
+  console.log("v1.2");
   loadFromLocalStorage();
 
   document
