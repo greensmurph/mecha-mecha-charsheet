@@ -1,5 +1,6 @@
 /**
  * Mega Mecha Overdrive: Golden - Character Sheet Logic
+ * version: 1.0.1
  * =================================================
  * Core game mechanics and UI interaction handling for the character sheet.
  * Features:
