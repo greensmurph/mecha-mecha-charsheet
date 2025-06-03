@@ -167,7 +167,6 @@ function toggleLockButtons(state) {
 function checkBonusSelections() {
   const bgVal = backgroundSelect.value;
   const mechVal = mechSelect.value;
-  console.log('bg val: ', bgVal, 'mech val: ', mechVal);
   if (bgVal !== '' && mechVal !== '') {
     // Both chosen -> reveal "lock" button and stats grid
     lockBonuses.classList.add('show');
@@ -440,7 +439,6 @@ function loadFromLocalStorage() {
 
 // 12. Initial render when the page loads
 window.addEventListener('DOMContentLoaded', () => {
-  console.log("v1.2");
   loadFromLocalStorage();
 
   document
