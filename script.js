@@ -419,8 +419,10 @@ function loadFromLocalStorage() {
     if (obj.statBaseIndex) {
       Object.assign(statBaseIndex, obj.statBaseIndex);
     }
+    statsContainer.classList.remove('inactive');
     renderStats();
     checkBonusSelections();
+
   } catch (e) {
     console.error("Failed to load from your browser storage:", e);
   }
