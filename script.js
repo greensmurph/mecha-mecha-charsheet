@@ -332,6 +332,10 @@ resetButton.addEventListener('click', () => {
   statsContainer.title = statsTitle;
   lockBonuses.classList.remove('show');
   aetherReset.click();
+  progressMonolog.value = 0;
+  playerNameInput.value = '';
+  charNameInput.value = '';
+  rankInput.value = '';
 
   // Clear dropdown values
   backgroundSelect.value = '';
