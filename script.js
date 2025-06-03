@@ -337,7 +337,7 @@ resetButton.addEventListener('click', () => {
   playerNameInput.value = '';
   charNameInput.value = '';
   rankInput.value = 'e';
-  notesInputs.value = '';
+  playerNotesInput.value = '';
 
   // Clear dropdown values
   backgroundSelect.value = '';
