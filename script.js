@@ -127,14 +127,15 @@ incrementMonolog.addEventListener('click', () => {
 // Bonus Selection and Dice Display Elements
 // --------------------------------------
 const backgroundSelect = document.getElementById('backgroundBonus');  // Background choice dropdown
+const backgroundSlider = document.getElementById('backgroundCarousel');
 const mechSelect       = document.getElementById('mechBonus');        // Mech choice dropdown
+const mechSlider       = document.getElementById('mechCarousel');
 const lockBonuses      = document.getElementById('lockBonuses');      // Lock selections button
 const resetButton      = document.getElementById('resetButton');      // Reset all button
 const resultDisplay    = document.getElementById('lastRoll');         // Last roll result display
 const popupContainer   = document.getElementById('popupContainer');   // Roll notification container
 const statsContainer   = document.getElementById('stats');            // Stat dice container
 const dunkelMech       = document.getElementById('dunkelMech');      // Regular Overdrive mech option
-const verdammisMech    = document.getElementById('verdammisMech');   // Special Overdrive mech variant
 const statsTitle       = 'Lock in your background and mech';
 
 // Initialize stats container in inactive state until bonuses are locked
@@ -185,7 +186,6 @@ function checkBonusSelections() {
 
 /**
  * Calculates total bonus count for a given stat from background/mech selections
- * Handles special case for Verdammis-class Ifrit (counts as Overdrive)
  * @param {string} statName - The stat to check bonuses for
  * @returns {number} - Number of bonuses (0-2) applying to the stat
  */
@@ -193,7 +193,6 @@ function getBonusCount(statName) {
   let count = 0;
   const bg = backgroundSelect.value;
   let mech = mechSelect.value;
-  if (mech === 'VerdammisMech') mech = 'Overdrive';
   if (bg === statName) count++;
   if (mech === statName) count++;
   return count;
@@ -310,14 +309,87 @@ async function onRoll(statName) {
   statBusy[statName] = false;
 }
 
+// A small helper to build a carousel controller object
+function makeCarousel(carouselId, hiddenInputId) {
+  const carouselEl   = document.getElementById(carouselId);
+  const carouselTrack = carouselEl.querySelector('.carousel-track');
+  const items       = carouselEl.querySelectorAll('.carousel-item');
+  const prevBtn     = carouselEl.querySelector('.carousel-nav.prev');
+  const nextBtn     = carouselEl.querySelector('.carousel-nav.next');
+  const hiddenInput = document.getElementById(hiddenInputId);
+
+  let currentIndex = 0;  // which card is currently shown
+  let startX = 0;
+  let isDragging = false;
+
+  // Update transform, toggle arrow disable, and sync hidden value
+  function showIndex(idx) {
+    // Clamp idx between 0 and items.length - 1
+    currentIndex = Math.max(0, Math.min(idx, items.length - 1));
+    const offset = -currentIndex * 100; // percent offset
+    carouselTrack.style.transform = `translateX(${offset}%)`;
+
+    // Disable prev/next at edges
+    prevBtn.disabled = (currentIndex === 0);
+    nextBtn.disabled = (currentIndex === items.length - 1);
+
+    // Sync the hidden <input> value to this card's data-value
+    const value = items[currentIndex].getAttribute('data-value');
+    hiddenInput.value = value;
+
+    // Trigger any onchange logic (so getBonusCount(), etc., update)
+    hiddenInput.dispatchEvent(new Event('change'));
+  }
+
+  // Attach navigation
+  prevBtn.addEventListener('click', () => showIndex(currentIndex - 1));
+  nextBtn.addEventListener('click', () => showIndex(currentIndex + 1));
+
+  carouselEl.addEventListener('touchstart', (e) => {
+    // only consider single-finger touches
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX;
+      isDragging = true;
+    }
+  }, { passive: true });
+  carouselEl.addEventListener('touchmove', (e) => {
+    // Prevent scrolling the page when dragging horizontally
+    if (!isDragging) return;
+    const currentX = e.touches[0].clientX;
+    const deltaX = currentX - startX;
+
+    // Prevent vertical scroll while horizontal dragging
+    if (Math.abs(deltaX) > 10) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  carouselEl.addEventListener('touchend', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const endX = e.changedTouches[0].clientX;
+    const diffX = endX - startX;
+
+    // Reset any temporary transform and re-enable transition
+    carouselTrack.style.transition = '';
+    showIndex(currentIndex + (diffX < -40 ? 1 : diffX > 40 ? -1 : 0));
+  })
+
+  // Initialize: hide "prev" on first, set hidden input
+  showIndex(0);
+  return { showIndex, length: items.length };
+}
+
 // 8. Confirm Bonus handlers (lock dropdowns)
 lockBonuses.addEventListener('click', () => {
   // If already locked, do nothing
   if (bonusesLocked) return;
 
   // Disable both selects, lock button, and show the unlock button
-  backgroundSelect.disabled = true;
-  mechSelect.disabled = true;
+  backgroundSlider.classList.add('locked');
+  mechSlider.classList.add('locked');
+  
   statsContainer.classList.remove('inactive');
   toggleLockButtons(true);
   saveToLocalStorage();
@@ -325,9 +397,10 @@ lockBonuses.addEventListener('click', () => {
 
 // 9. Reset sheet handler  (resets everthing)
 resetButton.addEventListener('click', () => {
-  // Re-enable dropdowns and lock button, hide the unlock button
-  backgroundSelect.removeAttribute('disabled');
-  mechSelect.removeAttribute('disabled');
+  backgroundSlider.classList.remove('locked');
+  backgroundSelect.value = '';
+  mechSlider.classList.remove('locked');
+  mechSelect.value = '';
   bonusesLocked = false;
   statsContainer.classList.add('inactive');
   statsContainer.title = statsTitle;
@@ -338,11 +411,6 @@ resetButton.addEventListener('click', () => {
   charNameInput.value = '';
   rankInput.value = 'e';
   playerNotesInput.value = '';
-
-  // Clear dropdown values
-  backgroundSelect.value = '';
-  mechSelect.value = '';
-  verdammisMech.disabled = true;
 
   // Reset stat base index
   stats.forEach(statName => {
@@ -359,30 +427,19 @@ resetButton.addEventListener('click', () => {
 
   // Re-render stat dice
   renderStats();
-  saveToLocalStorage();
+  localStorage.removeItem('megaMechaState');
 });
 
 // 10. Re-render on dropdown changes
 backgroundSelect.addEventListener('change', ()=>{
-  if (backgroundSelect.value === 'Overdrive') {
-    verdammisMech.disabled = false;
-    dunkelMech.disabled = true;
-    if (mechSelect.value === 'Overdrive') {
-      mechSelect.value = '';
-    }
-  } else {
-    verdammisMech.disabled = true;
-    dunkelMech.disabled = false;
-    if (mechSelect.value === 'VerdammisMech') {
-      mechSelect.value = '';
-    } 
-  }
   renderStats();
   checkBonusSelections();
+  saveToLocalStorage();
 });
 mechSelect.addEventListener('change', ()=>{
   renderStats();
   checkBonusSelections();
+  saveToLocalStorage();
 });
 
 // 11. Gather all user input
@@ -445,6 +502,9 @@ window.addEventListener('DOMContentLoaded', () => {
     .querySelectorAll(
       '#playerName, #charName, #rank, #notes, #backgroundBonus, #mechBonus'
     ).forEach(el => el.addEventListener('change', saveToLocalStorage));
+
+  const bgCarousel = makeCarousel('backgroundCarousel', 'backgroundBonus');
+  const mechCarousel = makeCarousel('mechCarousel', 'mechBonus');
   
   decrementAether.addEventListener('click', saveToLocalStorage);
   incrementAether.addEventListener('click', saveToLocalStorage);

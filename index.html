@@ -58,6 +58,97 @@
        </div>
       </section>
 
+      <!-- Mech and Background Selection Carousels -->
+       <section id="backgroundCarouselWrapper" class="carousel-wrapper">
+        <h2 class="carousel-title">Pick a Background</h2>
+        <div id="backgroundCarousel" class="carousel">
+          <div class="carousel-track">
+            <!-- Each .carousel-item is one background card -->
+            <div class="carousel-item" data-value="Focus">
+              <img src="/assets/img/bg-courier.webp" alt="Codename: Pizza Boy">
+              <h3>Pizza Boy: Courier</h3>
+              <p>I have a determined focus. No matter the job, I always deliver.</p>
+            </div>
+            <div class="carousel-item" data-value="Instinct">
+              <img src="/assets/img/bg-scavenger.webp" alt="Codename: Roach">
+              <h3>Roach: Scavenger</h3>
+              <p>You can't just be fast, you have to be first!</p>
+            </div>
+            <div class="carousel-item" data-value="Overdrive">
+              <img src="/assets/img/bg-mechanic.webp" alt="Codename: Reactor Jack">
+              <h3>Reactor Jack: Mechanic</h3>
+              <p>It's not overheating&mdash;it's motivated! Plus, I like it when it's too hot.</p>
+            </div>
+            <div class="carousel-item" data-value="Resonance">
+              <img src="/assets/img/bg-operator.webp" alt="Codename: Ghostline">
+              <h3>Ghostline: Operator</h3>
+              <p>I feel them, the electromagnetic ghosts between the static. I hear their song of the war machine.</p>
+            </div>
+            <div class="carousel-item" data-value="Style">
+              <img src="/assets/img/bg-freelancer.webp" alt="Codename: Spotlight">
+              <h3>Spotlight: Freelancer</h3>
+              <p>I'm the best at what I do, as long as my fans are watching!</p>
+            </div>
+            <div class="carousel-item" data-value="Willpower">
+              <img src="/assets/img/bg-sentinel.webp" alt="Codename: Junkernaut">
+              <h3>Junkernaut: Sentinel</h3>
+              <p>I am the wall that holds back the sea of destruction. I will not break.</p>
+            </div>
+          </div>
+          <button class="carousel-nav prev" data-for="background">‹</button>
+          <button class="carousel-nav next" data-for="background">›</button>
+        </div>
+        <!-- hidden input to store chosen value -->
+        <input type="hidden" id="backgroundBonus" value="">
+       </section>
+
+       <section id="mechCarouselWrapper" class="carousel-wrapper">
+        <h2 class="carousel-title">Choose your rig</h2>
+        <div id="mechCarousel" class="carousel">
+          <div class="carousel-track">
+            <!-- Each .carousel-item is one of background card -->
+            <div class="carousel-item" data-value="Focus">
+              <img src="/assets/img/seer.webp" alt="Clarion-class Seer">
+              <h3>Clarion-class Seer</h3>
+              <p>Recon mech with enhanced sensor arrays&mdash;always two steps ahead.</p>
+            </div>
+            <div class="carousel-item" data-value="Instinct">
+              <img src="/assets/img/wraith.webp" alt="Tsukari-class Wraith">
+              <h3>Tsukari-class Wraith</h3>
+              <p>Stealth chassis, near-silent servos, built to slip in and out unnoticed.</p>
+            </div>
+            <div class="carousel-item" data-value="Overdrive">
+              <img src="/assets/img/dunkel-ifrit.webp" alt="Dunkel-class Ifrit">
+              <h3>Dunkel-class Ifrit</h3>
+              <p>It's a train with legs and a gun.</p>
+            </div>
+            <div class="carousel-item" data-value="Overdrive">
+              <img src="/assets/img/verdammis-ifrit.webp" alt="Verdammis-class Ifrit">
+              <h3>Verdammis-class Ifrit</h3>
+              <p>Obsolete frame retrofitted with an entanglement core&mdash;energy density exceeds safe limits.</p>
+            </div>
+            <div class="carousel-item" data-value="Resonance">
+              <img src="/assets/img/seraphim.webp" alt="Lumen-class Seraphim">
+              <h3>Lumen-class Seraphim</h3>
+              <p>Harmonized mech, tuned for energy sync and resonance fields.</p>
+            </div>
+            <div class="carousel-item" data-value="Style">
+              <img src="/assets/img/mirage2.webp" alt="Tenshi-class Mirage">
+              <h3>Tenshi-class Mirage</h3>
+              <p>Showy, agile, and high-theatrics. Built to win and look good doing it.</p>
+            </div>
+            <div class="carousel-item" data-value="Willpower">
+              <img src="/assets/img/titan.webp" alt="Eisenmark-class Titan">
+              <h3>Eisenmark-class Titan</h3>
+              <p>It's a tank&mdash;with legs.</p>
+            </div>
+          </div>
+          <button class="carousel-nav prev" data-for="mech">‹</button>
+          <button class="carousel-nav next" data-for="mech">›</button>
+        </div>
+        <input type="hidden" id="mechBonus" value="">
+       </section>
+
       <section id="notes-section">
         <!-- Character Notes: Textarea for backstory and general notes about the character -->
         <div class="field-group">
@@ -88,36 +179,6 @@
           <small class="counter-hint">Increase your Monolog-o-meter when you fail a check</small>
          </div>
 
-    </section>
-
-    <!-- Character Bonus Selection: Background and mech choices that provide stat bonuses -->
-    <section id="bonuses">
-      <label>
-        Background Selection:
-        <select id="backgroundBonus">
-          <option value="">— none —</option>
-          <option value="Focus">Courier</option>
-          <option value="Instinct">Roach</option>
-          <option value="Overdrive">Reactor Jack</option>
-          <option value="Resonance">Ghostline</option>
-          <option value="Style">Spotlight</option>
-          <option value="Willpower">Junkernaut</option>
-        </select>
-      </label>
-  
-      <label>
-        Mech Selection:
-        <select id="mechBonus">
-          <option value="">— none —</option>
-          <option value="Focus">Clarion-class Seer</option>
-          <option value="Instinct">Tsukari-class Wraith</option>
-          <option id="dunkelMech" value="Overdrive">Dunkel-class Ifrit</option>
-          <option id="verdammisMech" value="VerdammisMech" disabled>Verdammis-class Ifrit</option>
-          <option value="Resonance">Lumen-class Seraphim</option>
-          <option value="Style">Tenshi-class Mirage</option>
-          <option value="Willpower">Eisenmark-class Titan</option>
-        </select>
-      </label>
     </section>
   
     <!-- Action Buttons: Controls for locking in bonus selections and resetting character sheet -->

@@ -271,6 +271,7 @@
   /* Style for all labels + selects (bonus dropdowns) */
   #bonuses {
     display: flex;
+    display: none;
     gap: 1rem;
     flex-wrap: wrap;
     margin-bottom: 1rem;
@@ -381,6 +382,119 @@
         opacity: 0.5;
       }
     }
+  }
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   CAROUSEL STYLES (for both Background and Mech)
+   ────────────────────────────────────────────────────────────────────────────── */
+
+   .carousel-wrapper {
+    margin: 1rem 0;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  /* Title above the cards */
+  .carousel-title {
+    text-align: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* The container that holds all “cards” */
+  .carousel {
+    background: transparent;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+
+    &.locked {
+      pointer-events: none;
+      opacity: 0.5;
+      position: relative;
+
+      &:after {
+        position: absolute;
+        content: '';
+        top: 0;
+        left: auto;
+        right: 0;
+        width: 20px;
+        height: 20px;
+        background-image: url("/assets/img/padlock.svg");
+      }
+
+      .carousel-nav {
+        display: none;
+      }
+    }
+  }
+
+  .carousel-track {
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+    width: 100%;
+  }
+  
+  /* Each individual “card” */
+  .carousel-item {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    text-align: center;
+  }
+  
+  .carousel-item img {
+    width: auto;
+    max-height: 200px;
+    height: auto;
+    margin: 0 auto 0.5rem;
+    border-radius: 8px;
+    background: transparent;
+  }
+  
+  .carousel-item h3 {
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+    color: #222;
+  }
+  
+  .carousel-item p {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.3;
+    margin: 0.25rem 0;
+  }
+  
+  /* Navigation arrows */
+  .carousel-nav {
+    position: absolute;
+    top: 25%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+  }
+  
+  .carousel-nav.prev[data-for="background"],
+  .carousel-nav.prev[data-for="mech"] {
+    left: 0.5rem;
+  }
+  
+  .carousel-nav.next[data-for="background"],
+  .carousel-nav.next[data-for="mech"] {
+    right: 0.5rem;
+  }
+  
+  .carousel-nav:disabled {
+    background: rgba(0, 0, 0, 0.2);
+    cursor: not-allowed;
   }
   
   /* Individual Dice Styling
@@ -614,6 +728,18 @@
     #bonuses select {
       font-size: 0.95rem;
       padding: 0.4rem;
+    }
+
+    .carousel-item img {
+      max-height: 175px;
+    }
+    .carousel-title {
+      font-size: 1rem;
+    }
+    .carousel-nav {
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 1.2rem;
     }
 
     .stat-die {
