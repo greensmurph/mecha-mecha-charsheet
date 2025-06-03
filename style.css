@@ -1,0 +1,725 @@
+/**
+ * Mega Mecha Overdrive: Golden - Character Sheet Styles
+ * ==================================================
+ * Core styling for the character sheet interface.
+ * Features:
+ * - Responsive layout with mobile support
+ * - Dynamic dice styling based on size (D4-D20)
+ * - Animated roll notifications
+ * - Resource counter displays
+ */
+
+/* ------------------------------
+   1. GLOBAL BASE STYLES
+   ------------------------------ */
+
+   html {
+    box-sizing: border-box;
+    font-size: 16px; /* Base font-size; will scale via rem/em */
+  }
+  *, *::before, *::after {
+    box-sizing: inherit;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: #fafafa;
+    color: #222;
+    font-family: sans-serif;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto;
+    padding: 1rem;            /* Add a little padding on mobile */
+    line-height: 1.4;
+    max-width: 500px;
+  }
+
+  aside {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 200px;
+    height: 100vh;
+    overflow-y: auto;
+    background: #fff;
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+
+  h1 {
+    font-size: inherit;
+  }
+  
+  .title {
+    text-align: center;
+    font-size: 1.75rem;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 1.25rem;
+    margin-bottom: .5rem;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  /* =============================================================================
+   2. CHARACTER INFO & FORM ELEMENTS
+   ============================================================================= 
+   Core layout and styling for character information fields, including:
+   - Player name and character details
+   - Rank selection dropdown
+   - Notes/backstory textarea
+   - Resource counters (Aether/Monolog)
+   */
+
+  #charInfo {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: .25rem;
+    padding: 0 1rem;
+
+    .subtitle {
+      width: 100%;
+    }
+
+    .field-group {
+      width: 100%;
+      max-width: 100px
+    }
+
+    [for=rank] {
+      display: flex;
+      flex-direction: column;
+      max-width: 50px
+    }
+  }
+
+  /* Form Field Groups
+     --------------- 
+     Consistent styling for input groups (label + input combinations)
+     Uses underline style for text inputs and custom styling for dropdowns */
+
+  .field-group {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Labels that wrap an input (.input-underline) */
+  .field-group label {
+    display: block;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Underline‐style text inputs */
+  .input-underline {
+    display: block;
+    width: 100%;
+    padding: 0.4rem 0.25rem;
+    font-size: 1rem;
+    border: none;
+    border-bottom: 2px solid #999;
+    background: transparent;
+    outline: none;
+    color: #111;
+    transition: border-color 0.2s;
+  }
+
+  .input-underline::placeholder {
+    color: #aaa;
+  }
+
+  .input-underline:focus {
+    border-bottom-color: #4CAF50;
+  }
+
+  /* Textarea styling */
+  #notes-section { width: 100%}
+  #notes {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 60px;
+    color: #111;
+  }
+
+/* Resource Counter Components
+   ------------------------
+   Styling for interactive resource tracking elements:
+   - Aether Token counter (0-200) with +/- buttons
+   - Monolog-o-meter progress bar (0-6) with visual feedback
+   - Button states (enabled/disabled/hover) */
+
+  .counter-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+
+  .counter-group label {
+    flex: 0 0 140px;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #333;
+  }
+
+  .counter-btn {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    width: 2rem;
+    height: 2rem;
+    margin: 0 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .counter-btn:hover:not(:disabled) {
+    background: #45A049;
+  }
+
+  .counter-btn:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+  }
+
+  #aetherCounter,
+  #meterCounter {
+    display: inline-block;
+    width: 2rem;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #111;
+  }
+
+  #aetherReset {
+    width: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background-color: darkorange;
+  }
+
+  #meterReset {
+    width: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Progress bar (Monolog-o-meter) */
+  #meterProgress {
+    flex: 1 1 200px;
+    margin-left: 0.75rem;
+    margin-top: 0.75rem;
+    height: 1rem;
+    appearance: none;
+  }
+
+  #meterProgress::-webkit-progress-bar {
+    background-color: #e0e0e0;
+    border-radius: 4px;
+  }
+
+  #meterProgress::-webkit-progress-value {
+    background-color: #2196F3;
+    border-radius: 4px;
+  }
+
+  #meterProgress::-moz-progress-bar {
+    background-color: #2196F3;
+    border-radius: 4px;
+  }
+
+  /* Hint text under counters */
+  .counter-hint {
+    flex: 1 1 100%;
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.25rem;
+    margin-left: 140px; /* align under label width */
+  }
+
+  
+  /* Style for all labels + selects (bonus dropdowns) */
+  #bonuses {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    justify-content: center;
+  }
+  
+  #bonuses label {
+    display: flex;
+    flex-direction: column;
+    font-size: 1rem;
+    flex: 1 1 45%; /* Two labels side by side on wider; stack on very narrow */
+    min-width: 180px;
+  }
+  
+  #bonuses select {
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: 100%;
+  }
+
+  .stat-bonus {
+    display: block;
+    height: 30px;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  #bonusActions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    .btn {
+      flex: 1 1 45%;
+      min-width: 120px;
+      padding: 0.6rem 1rem;
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &.show {
+        display: block;
+      }
+
+      &:hover {
+        background: #45A049;
+      }
+
+      &:disabled {
+        background: #bbb;
+        cursor: not-allowed;
+      }
+    }
+
+    .btn.danger {
+      background-color: rgb(196, 35, 35);
+    }
+    .btn .caution-mark {
+      font-size: 80%;
+      display: inline-flex;
+      margin-left: 0.5rem;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      width: 1.25rem;
+      height: 1.25rem;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+  
+  /* Horizontal rule */
+  hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 1rem 0;
+  }
+  
+  /* ------------------------------
+     3. STAT DICE COMPONENTS
+     ------------------------------ 
+     Interactive dice display system with:
+     - Visual progression from D4 to D20
+     - Unique styling per die size
+     - Hover and click animations
+     - Special effects for D20 (max level)
+     */
+  
+  /* Dice Container Layout */
+  #stats {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0;
+
+    &.inactive {
+      .stat-die {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+    }
+  }
+  
+  /* Individual Dice Styling
+     ----------------------
+     Responsive grid layout with:
+     - Flexible sizing (120-180px)
+     - Color coding by die size
+     - Interactive states (hover/active)
+     - Special D20 animations */
+  .stat-die {
+    flex: 1 1 30%;          /* Attempt three per row on mid-size, shrink as needed */
+    min-width: 120px;       /* Will wrap if narrower than this */
+    max-width: 180px;       /* Don’t let them grow too wide */
+    text-align: center;
+    margin: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid #333;
+    border-radius: 4px;
+    color: #000;
+    font-size: 1rem;
+    cursor: pointer;
+    user-select: none;
+    background-color: #f2f2f2;
+    transition: background-color 0.2s, transform 0.1s;
+    /* D4 */
+    &[data-die-index="0"] {
+      background-color: #e0e0e033;
+      border-color: #999;
+      color: #333;
+      &:hover { background-color: #d5d5d5;}
+    }
+    /* D6 */
+    &[data-die-index="1"] {
+      background-color: #d0f0f0;
+      border-color: #5ca797;
+      color: #045a55;
+      &:hover { background-color: #b0e8e8;}
+    }
+    /* D8 */
+    &[data-die-index="2"] {
+      background-color: #cce0ff;
+      border-color: #4a6fb3;
+      color: #233f75;
+      &:hover { background-color: #b8d4ff;}
+    }
+    /* D10 */
+    &[data-die-index="3"] {
+      background-color: #f0e0ff;
+      border-color: #7a4a99;
+      color: #4b1f66;
+      &:hover { background-color: #e6ccff;}
+    }
+    /* D12 */
+    &[data-die-index="4"] {
+      background-color: #fff4e0;
+      border-color: #cc7a33;
+      color: #663f1f;
+      &:hover { background-color: #ffeacc;}
+    }
+    /* D20 */
+    &[data-die-index="5"] {
+      background-color: #a02020;
+      border-color: #ffd700;
+      color: #fffacd;
+      box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.7);
+      animation: pulseD20 2s ease-in-out infinite;
+      &:hover {
+        background-color: #0b1a1a;
+        box-shadow: 0 0 12px 4px rgba(255, 215, 0, 0.9);
+      }
+      &:active {
+        animation: none;
+        box-shadow: 0 0 6px 1px rgba(255, 215, 0, 0.5);
+      }
+    }
+  }
+  
+  .stat-die:active {
+    transform: scale(0.95);
+  }
+
+  #lockBonuses {
+    display: none;
+    &.show { display: flex }
+  }
+  
+  /* ------------------------------
+     4. NOTIFICATION SYSTEM
+     ------------------------------ 
+     Roll result notification system featuring:
+     - Stacked popup messages (max 6)
+     - Different styles for results/crits/totals
+     - Smooth fade-in/out animations
+     - Persistent last roll display
+     */
+  
+  #popupContainer {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 1000;
+    text-align: center;
+    pointer-events: none;
+    padding: 0 0.5rem;
+  }
+  
+  .rollPopup {
+    display: inline-block;
+    background: rgba(50, 50, 50, 0.9);
+    color: #fff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 1;
+    transition: opacity 0.5s ease-out, transform 0.2s ease-in-out;
+    word-wrap: break-word;
+    line-height: 1.2;
+  }
+  
+  .rollPopup.rollCrit {
+    background: rgb(223, 37, 4);
+  }
+  
+  .rollPopup.rollTotal {
+    background: rgb(4, 114, 223);
+  }
+  
+  .rollPopup.rollResult {
+    background: rgba(50, 50, 50, 0.85);
+  }
+  
+  /* Fade-in effect for new popups */
+  .rollPopup {
+    transform: translateY(10px);
+    animation: popupEnter 0.2s forwards ease-out;
+  }
+
+  /* Persistent bottom-right "last roll" label */
+  #lastRoll {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    &.show {
+      opacity: 1;
+    }
+  }
+
+  /* ------------------------------
+     5. ANIMATIONS
+     ------------------------------ 
+     Core animation keyframes for:
+     - Popup entrance/exit transitions
+     - D20 die pulsing effect
+     */
+  
+  @keyframes popupEnter {
+    to { transform: translateY(0); }
+  }
+
+  @keyframes pulseD20 {
+    0% {
+      box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 14px 4px rgba(255, 215, 0, 0.9);
+    }
+    100% {
+      box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.7);
+    }
+  }
+  
+  /* ------------------------------
+     6. RESPONSIVE DESIGN
+     ------------------------------ 
+     Mobile-first responsive adjustments:
+     - Tablet layout (768px-968px)
+     - Mobile layout (<768px)
+     - Small screen optimizations
+     - Touch-friendly interaction areas
+     */
+
+  @media (max-width: 968px) and (min-width: 768px) {
+    main { margin-left: 250px;}
+  }
+  
+  @media (max-width: 768px) {
+    body { height: 100%; }
+    main {
+      padding: 0.75rem;
+      margin-left: auto;
+      margin-bottom: 150px;
+    }
+
+    aside {
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      height: 175px;
+      width: 100vw;
+      padding: 0.5rem;
+    }
+
+    #stats {
+      gap: 0.25rem;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  
+    .title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+  
+    #bonuses {
+      gap: 0.5rem;
+    }
+  
+    #bonuses label {
+      flex: 1 1 100%;
+      min-width: 50%;
+    }
+  
+    #bonuses select {
+      font-size: 0.95rem;
+      padding: 0.4rem;
+    }
+
+    .stat-die {
+      flex: 1 1 45%;
+      min-width: 100px;
+      max-width: 140px;
+      margin: 0.3rem;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.95rem;
+      border-radius: 4px;
+    }
+  
+    /* Make popups slightly larger text on very small screens */
+    .rollPopup {
+      font-size: 1rem;
+      padding: 0.6rem 0.8rem;
+    }
+  
+    #popupContainer {
+      width: 95%;
+      bottom: 0.75rem;
+    }
+    #charInfo {
+      padding: 0 0.5rem;
+    }
+    .field-group {
+      margin-bottom: 0.6rem;
+    }
+    .field-group label {
+      margin-bottom: 0.25rem;
+    }
+    .input-underline {
+      font-size: 0.95rem;
+    }
+    #notes {
+      font-size: 0.95rem;
+    }
+    .counter-group {
+      align-items: flex-center;
+
+    }
+    .counter-group label {
+      margin-bottom: 0.25rem;
+
+    }
+    .counter-btn,
+    #aetherCounter,
+    #meterCounter {
+      margin: 0.25rem 0.5rem 0.25rem 0;
+    }
+    #meterProgress {
+      margin-left: 0;
+      min-width: 100%;
+    }
+    .counter-hint {
+      margin-left: 0;
+    }
+  }
+
+  /* Small Screen Optimizations
+     ------------------------
+     Adjustments for screens under 480px:
+     - Full-width buttons
+     - Reduced padding/margins
+     - Adjusted font sizes */
+  @media (max-width: 480px) {
+    main { max-width: 90%;}
+    #bonusActions .btn {
+      flex: 1 1 100%;
+      min-width: 1px;
+      font-size: 0.9rem;
+    }
+  }
+  
+  /* ------------------------------
+     7. MICRO SCREEN SUPPORT
+     ------------------------------ 
+     Extra optimizations for very small screens (<360px):
+     - Single column dice layout
+     - Minimized padding/margins
+     - Adjusted notification positioning
+     - Optimized text sizes
+     */
+  
+  @media (max-width: 360px) {
+    .stat-die {
+      flex: 1 1 100%;
+      min-width: 0;
+      max-width: 100%;
+      margin: 0.25rem 0;
+      font-size: 0.9rem;
+    }
+  
+    .rollPopup {
+      font-size: 0.95rem;
+      padding: 0.5rem 0.7rem;
+      line-height: 1.1;
+    }
+
+    #lastRoll {
+      font-size: 0.85rem;
+      padding: 0.4rem 0.6rem;
+      bottom: 0.75rem;
+      right: 0.75rem;
+      position: absolute;
+      bottom: 1rem;
+    }
+  }

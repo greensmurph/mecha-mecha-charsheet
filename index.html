@@ -1,0 +1,147 @@
+<!--
+  Mega Mecha Overdrive: Golden - Character Sheet
+  ============================================
+  A dynamic character sheet web application for the Mega Mecha Overdrive: Golden tabletop RPG system.
+  Features include:
+  - Character info management (name, rank, notes)
+  - Dynamic dice system with evolution mechanics
+  - Background and mech selection with stat bonuses
+  - Resource tracking (Aether Tokens, Monolog-o-meter)
+  - Persistent storage of character data
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mega Mecha Overdrive: Golden</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <main>
+
+    <section class="title">
+      <h1>Mega Mecha Overdrive: <span>Golden</span></h1>
+    </section>
+
+    <!-- Character Information Section: Contains player details, character name, rank selection -->
+    <section id="charInfo">
+      <h2 class="subtitle">Character Info</h2>
+
+      <!-- Player & Character Fields: Text inputs for player name, character name, and rank selection dropdown -->
+       <div class="field-group">
+        <label for="playerName">Player:
+          <input type="text" id="playerName" class="input-underline" placeholder="Your name">
+        </label>
+       </div>
+
+       <div class="field-group">
+        <label for="charName">Character:
+          <input type="text" id="charName" class="input-underline" placeholder="Pilot name">
+        </label>
+       </div>
+
+       <div class="field-group">
+        <label for="rank">Rank:
+          <select name="rank" id="rank">
+            <option value="e" selected>E</option>
+            <option value="d" disabled>D</option>
+            <option value="c" disabled>C</option>
+            <option value="b" disabled>B</option>
+            <option value="a" disabled>A</option>
+            <option value="s" disabled>S</option>
+            <option value="u" disabled hidden>U</option>
+          </select>
+        </label>
+       </div>
+      </section>
+
+      <section id="notes-section">
+        <!-- Character Notes: Textarea for backstory and general notes about the character -->
+        <div class="field-group">
+        <label for="notes">Notes / Backstory:</label>
+        <textarea id="notes" rows="3" placeholder="Notes..."></textarea>
+        </div>
+      </section>
+
+      <section id="counters-section">
+       <!-- Aether Token Counter: Resource tracking system for collecting and spending Aether tokens (0-200) -->
+        <div class="field-group counter-group">
+          <label>Aether Tokens</label>
+          <button id="aetherPlus" class="counter-btn">+</button>
+          <span id="aetherCounter">0</span>
+          <button id="aetherMinus" class="counter-btn">-</button>
+          <button id="aetherReset" class="counter-btn">Clear</button>
+          <br>
+          <small class="counter-hint">Collect or spend Aether tokens</small>
+        </div>
+
+        <!-- Monolog-o-meter: Progress bar tracking system (0-6) that fills when failing checks, provides bonus when full -->
+         <div class="field-group counter-group">
+          <label>Monolog-o-meter</label>
+          <button id="meterPlus" class="counter-btn">+</button>
+          <span id="meterCounter">0</span>
+          <button id="meterReset" class="counter-btn">Use!</button>
+          <progress id="meterProgress" value="0" max="6"></progress>
+          <small class="counter-hint">Increase your Monolog-o-meter when you fail a check</small>
+         </div>
+
+    </section>
+
+    <!-- Character Bonus Selection: Background and mech choices that provide stat bonuses -->
+    <section id="bonuses">
+      <label>
+        Background Selection:
+        <select id="backgroundBonus">
+          <option value="">— none —</option>
+          <option value="Focus">Courier</option>
+          <option value="Instinct">Roach</option>
+          <option value="Overdrive">Reactor Jack</option>
+          <option value="Resonance">Ghostline</option>
+          <option value="Style">Spotlight</option>
+          <option value="Willpower">Junkernaut</option>
+        </select>
+      </label>
+  
+      <label>
+        Mech Selection:
+        <select id="mechBonus">
+          <option value="">— none —</option>
+          <option value="Focus">Clarion-class Seer</option>
+          <option value="Instinct">Tsukari-class Wraith</option>
+          <option id="dunkelMech" value="Overdrive">Dunkel-class Ifrit</option>
+          <option id="verdammisMech" value="VerdammisMech" disabled>Verdammis-class Ifrit</option>
+          <option value="Resonance">Lumen-class Seraphim</option>
+          <option value="Style">Tenshi-class Mirage</option>
+          <option value="Willpower">Eisenmark-class Titan</option>
+        </select>
+      </label>
+    </section>
+  
+    <!-- Action Buttons: Controls for locking in bonus selections and resetting character sheet -->
+     <section id="bonusActions">
+      <button id="lockBonuses" class="btn">Lock Bonuses</button>
+      <button id="resetButton" class="btn danger">Reset <p class="caution-mark">!</p></button>
+     </section>
+     <p>Be sure to lock in your background and mech selections!</p>
+     <br>
+  
+    <div id="lastRoll"></div>
+  </main>
+
+  <aside>
+    <!-- Stat Dice Panel: Interactive dice display showing current die size for each stat
+         Stats can evolve to larger die sizes through critical rolls -->
+    <section id="stats">
+      <!-- We’ll inject one die “button” per stat here via JavaScript -->
+    </section>
+  </aside>
+
+  <!-- Roll Results Display: Container for showing dice roll results, criticals, and stat evolutions
+       Popups fade out automatically after displaying -->
+  <div id="popupContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
