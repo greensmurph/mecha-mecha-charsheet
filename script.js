@@ -335,7 +335,7 @@ resetButton.addEventListener('click', () => {
   progressMonolog.value = 0;
   playerNameInput.value = '';
   charNameInput.value = '';
-  rankInput.value = '';
+  rankInput.value = 'e';
 
   // Clear dropdown values
   backgroundSelect.value = '';
@@ -343,7 +343,10 @@ resetButton.addEventListener('click', () => {
   verdammisMech.disabled = true;
 
   // Reset stat base index
-  stats.forEach(statName => statBaseIndex[statName] = 0);
+  stats.forEach(statName => {
+    statBaseIndex[statName] = 0;
+    statBusy[statName] = false;
+  });
 
   // Clear any popups on screen
   popupContainer.innerHTML = '';
