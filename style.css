@@ -103,7 +103,8 @@
 
     .field-group {
       width: 100%;
-      max-width: 100px
+      max-width: 100px;
+      &:last-of-type {max-width: 50px;}
     }
 
     [for=rank] {
@@ -638,7 +639,7 @@
       bottom: 0.75rem;
     }
     #charInfo {
-      padding: 0 0.5rem;
+      padding: 0;
     }
     .field-group {
       margin-bottom: 0.6rem;
