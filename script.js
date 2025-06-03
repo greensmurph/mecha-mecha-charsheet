@@ -1,6 +1,6 @@
 /**
  * Mega Mecha Overdrive: Golden - Character Sheet Logic
- * version: 1.0.1
+ * version: 1.2
  * =================================================
  * Core game mechanics and UI interaction handling for the character sheet.
  * Features:
@@ -338,6 +338,7 @@ resetButton.addEventListener('click', () => {
   playerNameInput.value = '';
   charNameInput.value = '';
   rankInput.value = 'e';
+  notesInputs.value = '';
 
   // Clear dropdown values
   backgroundSelect.value = '';
