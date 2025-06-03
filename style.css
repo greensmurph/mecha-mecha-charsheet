@@ -410,8 +410,11 @@
 
     &.locked {
       pointer-events: none;
-      opacity: 0.5;
       position: relative;
+
+      .carousel-item img {
+        opacity: 0.5;
+      }
 
       &:after {
         position: absolute;
