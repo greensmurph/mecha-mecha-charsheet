@@ -1,39 +1,83 @@
 // script.js — Refactored Mega Mecha Overdrive: Golden
 // version: 2.3 — Added Manual-Evolve toggle & per-stat adjust buttons
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from 'https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js';
+import {
+  getFirestore, collection,
+  doc, getDoc, setDoc
+} from 'https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/11.9.0/firebase-app-check.js';
 
-((d) => {
+(()=>{
+  // ----- Firebase Setup ----- //
+  const firebaseConfig = {
+    apiKey: "AIzaSyDHOwOzz83Ua5ZNk7VaKbuv2ZI-XvhJl-c",
+    authDomain: "mega-mecha-sheet.firebaseapp.com",
+    projectId: "mega-mecha-sheet",
+    storageBucket: "mega-mecha-sheet.firebasestorage.app",
+    messagingSenderId: "1062382078139",
+    appId: "1:1062382078139:web:82d439a151a053c282419e"
+  };
+
+  self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  const RECAPTCHA_V3_SITE_KEY = '6LcphVgrAAAAAG0iwvqEgoyH7ba0lX-ztkf8iLQe';
+  
+  const app = initializeApp(firebaseConfig);
+
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
+    isTokenAutoRefreshEnabled: true
+  });
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
   // ----- DOM References -----
   const dom = {
-    playerName: d.getElementById('playerName'),
-    charName:   d.getElementById('charName'),
-    rank:       d.getElementById('rank'),
-    notes:      d.getElementById('notes'),
+    loginEmail: document.getElementById('loginEmail'),
+    loginPassword: document.getElementById('loginPassword'),
+    btnLogin: document.getElementById('btnLogin'),
+    btnSignUp: document.getElementById('btnSignUp'),
+    btnSignOut: document.getElementById('btnSignOut'),
+    loginForm: document.querySelector('#login form'),
 
-    aetherMinus: d.getElementById('aetherMinus'),
-    aetherPlus:  d.getElementById('aetherPlus'),
-    aetherCount: d.getElementById('aetherCounter'),
-    aetherReset: d.getElementById('aetherReset'),
-    meterUse:    d.getElementById('meterReset'),
-    meterPlus:   d.getElementById('meterPlus'),
-    meterCount:  d.getElementById('meterCounter'),
-    meterProg:   d.getElementById('meterProgress'),
+    // Character Info
+    playerName: document.getElementById('playerName'),
+    charName:   document.getElementById('charName'),
+    rank:       document.getElementById('rank'),
+    notes:      document.getElementById('notes'),
 
-    bgSlider:    d.getElementById('backgroundCarousel'),
-    mechSlider:  d.getElementById('mechCarousel'),
-    bgInput:     d.getElementById('backgroundBonus'),
-    mechInput:   d.getElementById('mechBonus'),
-    lockBtn:     d.getElementById('lockBonuses'),
-    resetBtn:    d.getElementById('resetButton'),
-    statsPanel:  d.getElementById('stats'),
+    aetherMinus: document.getElementById('aetherMinus'),
+    aetherPlus:  document.getElementById('aetherPlus'),
+    aetherCount: document.getElementById('aetherCounter'),
+    aetherReset: document.getElementById('aetherReset'),
+    meterUse:    document.getElementById('meterReset'),
+    meterPlus:   document.getElementById('meterPlus'),
+    meterCount:  document.getElementById('meterCounter'),
+    meterProg:   document.getElementById('meterProgress'),
 
-    manualToggle: d.getElementById('manualToggle'), // checkbox for manual mode
-    lastRoll:      d.getElementById('lastRoll'),
-    popupContainer: d.getElementById('popupContainer'),
+    bgSlider:    document.getElementById('backgroundCarousel'),
+    mechSlider:  document.getElementById('mechCarousel'),
+    bgInput:     document.getElementById('backgroundBonus'),
+    mechInput:   document.getElementById('mechBonus'),
+    lockBtn:     document.getElementById('lockBonuses'),
+    resetBtn:    document.getElementById('resetButton'),
+    statsPanel:  document.getElementById('stats'),
+
+    manualToggle: document.getElementById('manualToggle'), // checkbox for manual mode
+    lastRoll:      document.getElementById('lastRoll'),
+    popupContainer: document.getElementById('popupContainer'),
 
     // HP references
-    hpSection: d.getElementById('hpSection'),       // wrapper for HP
-    hpContainer: d.getElementById('hpContainer'),   // container for 5 slots
-    shieldToggle: d.getElementById('shieldToggle')  // checkbox to enable shield
+    hpSection: document.getElementById('hpSection'),       // wrapper for HP
+    hpContainer: document.getElementById('hpContainer'),   // container for 5 slots
+    shieldToggle: document.getElementById('shieldToggle')  // checkbox to enable shield
   };
 
   // ----- State -----
@@ -46,6 +90,8 @@
   let valueMonolog  = 0;
   let bonusesLocked = false;
   let manualMode    = false;
+  let currentUser   = null;
+  let syncTimeout   = null;
 
   //HP state: 5 core HP slots (tru=full), plus shield
   let hpSlots       = Array(5).fill(true);
@@ -53,6 +99,79 @@
 
   const statsTitle  = 'Lock in your background and mech';
   let bgCarousel, mechCarousel;
+
+  // ----- Auth Functions -----
+  function signInUser() {
+    const email = dom.loginEmail.value.trim();
+    const pass = dom.loginPassword.value.trim();
+
+    if (!email || !pass) {
+      showPopup('Please enter email and password', 'rollCrit');
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, pass)
+      .then(res => showPopup(`Signed in as ${res.user.email}`, 'rollTotal'))
+      .catch(err => showPopup(err.message, 'rollCrit'));
+  }
+
+  function signUpUser() {
+    const email = dom.loginEmail.value.trim();
+    const pass = dom.loginPassword.value.trim();
+
+    if (!email || !pass) {
+      showPopup('Please enter email and password', 'rollCrit');
+      return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, pass)
+      .then(res => showPopup(`Account created: ${res.user.email}`, 'rollTotal'))
+      .catch(err => showPopup(err.message, 'rollCrit'));
+  }
+
+  function signOutUser() {
+    saveToFirestore();
+    signOut(auth);
+  }
+
+  function handleAuthChange(user) {
+    currentUser = user;
+    if (user) {
+      console.log('✅ Logged in as ', user.email);
+      loadUserData();
+      dom.btnSignOut.style.display = 'inline-block';
+    } else {
+      currentUser = null;
+      dom.btnSignOut.style.display = 'none';
+    }
+  }
+
+  function saveToFirestore() {
+    if (!currentUser) return;
+    const docRef = doc(db, 'characters', currentUser.uid);
+    const data = gatherState();
+    return setDoc(docRef, data)
+      .then(() => console.log('📝 Sync to Firestore'))
+      .catch(e => console.error('Save error: ', e));
+  }
+
+  function scheduleSync() {
+    if (!currentUser) return;
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(saveToFirestore, 10000); // 10s debounce
+  }
+
+  async function loadUserData() {
+    const docRef = doc(db, 'characters', currentUser.uid);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      localStorage.setItem('megaMechaState', JSON.stringify(snap.data()));
+      loadFromLocalStorage();
+      showPopup('✅ Loaded from cloud', 'rollTotal');
+    } else {
+      console.log('No cloud data found');
+    }
+  }
 
   // ----- Utility Functions -----
   const updateAether = () => {
@@ -93,7 +212,7 @@
     dom.hpSection.classList.toggle('shield-active', shieldActive);
 
     hpSlots.forEach((full, i) => {
-      const slot = d.createElement('div');
+      const slot = document.createElement('div');
       slot.className = `hp-slot ${full ? 'full' : 'empty'}`;
       slot.addEventListener('click', () => {
         // toggle damage/heal
@@ -293,6 +412,7 @@
 
   function saveToLocalStorage() {
     localStorage.setItem('megaMechaState', JSON.stringify(gatherState()));
+    scheduleSync();
   }
 
   function loadFromLocalStorage() {
@@ -310,7 +430,7 @@
       valueAether = o.aether;
       valueMonolog = o.monolog;
       bonusesLocked = o.bonusesLocked;
-      if (bgCarousel) bgCarousel.show(o.background.index || 0);
+      if (bgCarousel) bgCarousel.show(o.background?.index || 0);
       if (mechCarousel) mechCarousel.show(o.mech.index || 0);
       if (shieldActive) dom.shieldToggle.checked = true;
     } catch (e) {
@@ -327,9 +447,17 @@
     // restore data
     loadFromLocalStorage();
 
+    // Auth
+    onAuthStateChanged(auth, handleAuthChange);
+
     // draw UI
     renderStats(); renderHP(); updateAether(); updateMonolog(); updateLockUI();
 
+    // event listeners
+    dom.loginForm.addEventListener('submit', e => e.preventDefault());
+    dom.btnLogin.addEventListener('click', ()=> {signInUser();});
+    dom.btnSignUp.addEventListener('click', ()=> {signUpUser();});
+    dom.btnSignOut.addEventListener('click', ()=> {signOutUser();});
     [dom.bgInput, dom.mechInput].forEach(el => el.addEventListener('change', () => { renderStats(); updateLockUI(); saveToLocalStorage(); }));
     dom.aetherMinus.addEventListener('click', ()=>{ if(valueAether>0) valueAether--; updateAether(); saveToLocalStorage(); });
     dom.aetherPlus .addEventListener('click', ()=>{ if(valueAether<200) valueAether++; updateAether(); saveToLocalStorage(); });
@@ -338,4 +466,5 @@
     dom.meterPlus.addEventListener('click', ()=>{ if(valueMonolog<meterMax) valueMonolog++; updateMonolog(); saveToLocalStorage(); });
     const origRoll = rollStat; rollStat = async s=>{ await origRoll(s); saveToLocalStorage(); };
   });
-})(document);
+
+})();
