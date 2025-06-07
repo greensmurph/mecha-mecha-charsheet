@@ -1,524 +1,339 @@
-/**
- * Mega Mecha Overdrive: Golden - Character Sheet Logic
- * version: 1.2
- * =================================================
- * Core game mechanics and UI interaction handling for the character sheet.
- * Features:
- * - Stat dice system with evolution mechanics
- * - Resource tracking (Aether/Monolog)
- * - Character data persistence
- * - Background/Mech bonus management
- */
+// script.js — Refactored Mega Mecha Overdrive: Golden
+// version: 2.3 — Added Manual-Evolve toggle & per-stat adjust buttons
 
-// Core Game Constants
-// ------------------
-// Available stats and their corresponding die sizes (D4 -> D20)
-const stats = ['Focus','Instinct','Overdrive','Resonance','Style','Willpower'];
-const dieSizes = [4, 6, 8, 10, 12, 20];
+((d) => {
+  // ----- DOM References -----
+  const dom = {
+    playerName: d.getElementById('playerName'),
+    charName:   d.getElementById('charName'),
+    rank:       d.getElementById('rank'),
+    notes:      d.getElementById('notes'),
 
-// Stat Evolution Tracking
-// ----------------------
-// Tracks the base evolution level (0-5) for each stat
-// This index maps to dieSizes array (e.g., index 0 = D4, 1 = D6, etc.)
-const statBaseIndex = {
-  Focus:     0,
-  Instinct:  0,
-  Overdrive: 0,
-  Resonance: 0,
-  Style:     0,
-  Willpower: 0
-};
+    aetherMinus: d.getElementById('aetherMinus'),
+    aetherPlus:  d.getElementById('aetherPlus'),
+    aetherCount: d.getElementById('aetherCounter'),
+    aetherReset: d.getElementById('aetherReset'),
+    meterUse:    d.getElementById('meterReset'),
+    meterPlus:   d.getElementById('meterPlus'),
+    meterCount:  d.getElementById('meterCounter'),
+    meterProg:   d.getElementById('meterProgress'),
 
-// Prevents multiple simultaneous rolls of the same stat
-const statBusy = {
-  Focus:     false,
-  Instinct:  false,
-  Overdrive: false,
-  Resonance: false,
-  Style:     false,
-  Willpower: false
-};
+    bgSlider:    d.getElementById('backgroundCarousel'),
+    mechSlider:  d.getElementById('mechCarousel'),
+    bgInput:     d.getElementById('backgroundBonus'),
+    mechInput:   d.getElementById('mechBonus'),
+    lockBtn:     d.getElementById('lockBonuses'),
+    resetBtn:    d.getElementById('resetButton'),
+    statsPanel:  d.getElementById('stats'),
 
-// DOM Element References
-// --------------------
-// Character Information Fields
-const playerNameInput = document.getElementById('playerName');
-const charNameInput = document.getElementById('charName');
-const rankInput = document.getElementById('rank');
-const playerNotesInput = document.getElementById('notes');
+    manualToggle: d.getElementById('manualToggle'), // checkbox for manual mode
+    lastRoll:      d.getElementById('lastRoll'),
+    popupContainer: d.getElementById('popupContainer'),
 
-// Resource Counter Elements
-// -----------------------
-// Aether Token Controls
-const decrementAether  = document.getElementById('aetherMinus');
-const incrementAether  = document.getElementById('aetherPlus');
-const textAether      = document.getElementById('aetherCounter');
-const resetAether     = document.getElementById('aetherReset');
+    // HP references
+    hpSection: d.getElementById('hpSection'),       // wrapper for HP
+    hpContainer: d.getElementById('hpContainer'),   // container for 5 slots
+    shieldToggle: d.getElementById('shieldToggle')  // checkbox to enable shield
+  };
 
-// Monolog-o-meter Controls
-const useMonolog      = document.getElementById('meterReset');
-const incrementMonolog = document.getElementById('meterPlus');
-const textMonolog     = document.getElementById('meterCounter');
-const progressMonolog = document.getElementById('meterProgress');
+  // ----- State -----
+  const stats = ['Focus','Instinct','Overdrive','Resonance','Style','Willpower'];
+  const dieSizes = [4, 6, 8, 10, 12, 20];
+  const statBaseIndex = Object.fromEntries(stats.map(s => [s, 0]));
+  const statBusy      = Object.fromEntries(stats.map(s => [s, false]));
+  const meterMax      = 5;
+  let valueAether   = 0;
+  let valueMonolog  = 0;
+  let bonusesLocked = false;
+  let manualMode    = false;
 
-// Resource Counter State
-// Initial values for Aether tokens (0-200) and Monolog meter (0-6)
-let valueAether = 0;
-let valueMonolog = 0;
+  //HP state: 5 core HP slots (tru=full), plus shield
+  let hpSlots       = Array(5).fill(true);
+  let shieldActive  = false;
 
-/**
- * Updates the Aether token counter display and button states
- * Disables increment at max (200) and decrement at min (0)
- */
-function updateCounterAether() {
-  textAether.textContent = valueAether;
-  decrementAether.disabled = valueAether <= 0;
-  incrementAether.disabled = valueAether >= 200;
-}
+  const statsTitle  = 'Lock in your background and mech';
+  let bgCarousel, mechCarousel;
 
-/**
- * Updates the Monolog-o-meter display, progress bar, and button states
- * Disables increment at max (6) and enables "Use!" button when full
- */
-function updateCounterMonolog() {
-  textMonolog.textContent = valueMonolog;
-  progressMonolog.value = valueMonolog;
-  useMonolog.disabled = valueMonolog < 6;
-  incrementMonolog.disabled = valueMonolog >= 6;
-}
+  // ----- Utility Functions -----
+  const updateAether = () => {
+    dom.aetherCount.textContent = valueAether;
+    dom.aetherMinus.disabled = valueAether <= 0;
+    dom.aetherPlus.disabled  = valueAether >= 200;
+  };
 
-// Aether Token Event Handlers
-// -------------------------
-decrementAether.addEventListener('click', () => {
-  if (valueAether > 0) {
-    valueAether--;
-    updateCounterAether();
-  }
-});
+  const updateMonolog = () => {
+    dom.meterCount.textContent = valueMonolog;
+    dom.meterProg.value        = valueMonolog;
+    dom.meterUse.disabled      = valueMonolog < meterMax;
+    dom.meterPlus.disabled     = valueMonolog >= meterMax;
+  };
 
-incrementAether.addEventListener('click', () => {
-  if (valueAether < 200) {
-    valueAether++;
-    updateCounterAether();
-  }
-});
+  const showPopup = (msg, type) => {
+    const pu = document.createElement('div');
+    pu.className = `rollPopup ${type}`;
+    pu.textContent = msg;
+    const ctr = dom.popupContainer;
+    while (ctr.children.length >= 6) ctr.removeChild(ctr.firstChild);
+    ctr.appendChild(pu);
+    setTimeout(() => pu.style.opacity = 0, 4500);
+    setTimeout(() => pu.remove(), 6000);
+  };
 
-resetAether.addEventListener('click', () => {
-  valueAether = 0;
-  updateCounterAether();
-});
+  const getBonusCount = stat => {
+    let cnt = 0;
+    if (dom.bgInput.value === stat) cnt++;
+    if (dom.mechInput.value === stat) cnt++;
+    return cnt;
+  };
 
-// Monolog-o-meter Event Handlers
-// ---------------------------
-useMonolog.addEventListener('click', () => {
-  if (valueMonolog === 6) {
-    valueMonolog = 0;
-    updateCounterMonolog();
-  }
-});
+  // ----- HP Rendering -----
+  function renderHP() {
+    if (!dom.hpContainer) return;
+    dom.hpContainer.innerHTML = '';
+    dom.hpSection.classList.toggle('shield-active', shieldActive);
 
-incrementMonolog.addEventListener('click', () => {
-  if (valueMonolog < 6) {
-    valueMonolog++;
-    updateCounterMonolog();
-  }
-});
-
-// Bonus Selection and Dice Display Elements
-// --------------------------------------
-const backgroundSelect = document.getElementById('backgroundBonus');  // Background choice dropdown
-const backgroundSlider = document.getElementById('backgroundCarousel');
-const mechSelect       = document.getElementById('mechBonus');        // Mech choice dropdown
-const mechSlider       = document.getElementById('mechCarousel');
-const lockBonuses      = document.getElementById('lockBonuses');      // Lock selections button
-const resetButton      = document.getElementById('resetButton');      // Reset all button
-const resultDisplay    = document.getElementById('lastRoll');         // Last roll result display
-const popupContainer   = document.getElementById('popupContainer');   // Roll notification container
-const statsContainer   = document.getElementById('stats');            // Stat dice container
-const dunkelMech       = document.getElementById('dunkelMech');      // Regular Overdrive mech option
-const statsTitle       = 'Lock in your background and mech';
-
-// Initialize stats container in inactive state until bonuses are locked
-statsContainer.title = statsTitle;
-statsContainer.className = 'inactive';
-
-// Bonus Selection State
-// Tracks if background/mech choices are locked, preventing further changes
-let bonusesLocked = false;
-
-/**
- * Toggles the lock state of bonus selection dropdowns
- * @param {boolean} state - True to lock selections, false to unlock
- */
-function toggleLockButtons(state) {
-  // Update lock state and button visibility
-  bonusesLocked = state;
-  if (bonusesLocked) {
-    lockBonuses.classList.remove('show');
-  } else {
-    lockBonuses.classList.add('show');
-  }
-}
-
-/**
- * Validates bonus selections and updates UI accordingly
- * Shows lock button when both background and mech are selected
- * Hides lock button and stats grid when selections are incomplete
- */
-function checkBonusSelections() {
-  const bgVal = backgroundSelect.value;
-  const mechVal = mechSelect.value;
-  if (bgVal !== '' && mechVal !== '') {
-    // Both chosen -> reveal "lock" button and stats grid
-    lockBonuses.classList.add('show');
-
-  } else {
-    // At least one not chosen -> hide "lock" button and stats grid
-    if (bgVal !== '' || mechVal !== '') {
-      // do nothing
-    } else {
-      toggleLockButtons(false);
-      statsContainer.classList.add('inactive');
-      statsContainer.title = statsTitle;
-    }
-  }
-}
-
-/**
- * Calculates total bonus count for a given stat from background/mech selections
- * @param {string} statName - The stat to check bonuses for
- * @returns {number} - Number of bonuses (0-2) applying to the stat
- */
-function getBonusCount(statName) {
-  let count = 0;
-  const bg = backgroundSelect.value;
-  let mech = mechSelect.value;
-  if (bg === statName) count++;
-  if (mech === statName) count++;
-  return count;
-}
-
-/**
- * Renders the stat dice display panel
- * Creates interactive dice buttons for each stat, showing current die size
- * Die size is computed from base evolution level plus active bonuses
- * Visual styling changes based on die size (D4-D20)
- */
-function renderStats() {
-  const container = document.getElementById('stats');
-  container.innerHTML = '';
-
-  stats.forEach(statName => {
-    const base = statBaseIndex[statName];
-    const bonusCount = getBonusCount(statName);
-    const effectiveIndex = Math.min(base + bonusCount, dieSizes.length - 1);
-    const dieFace = dieSizes[effectiveIndex];
-
-    const div = document.createElement('div');
-    div.className = 'stat-die';
-    div.dataset.stat = statName;
-    div.dataset.dieIndex = effectiveIndex;
-    div.textContent = `${statName}: D${dieFace}`;
-    div.addEventListener('click', () => onRoll(statName));
-    container.appendChild(div);
-  });
-}
-
-/**
- * Displays a temporary popup message for roll results
- * @param {string} message - The message to display
- * @param {string} rollType - Type of roll result ('rollResult'|'rollCrit'|'rollTotal')
- * Popups fade out after 1.5s and are removed after 3s
- * Maximum of 6 popups shown simultaneously
- */
-function showPopup(message, rollType) {
-  // Maintain a maximum of 6 recent popups
-  const container = document.getElementById('popupContainer');
-  while (container.children.length >= 6) {
-    container.removeChild(container.firstChild);
+    hpSlots.forEach((full, i) => {
+      const slot = d.createElement('div');
+      slot.className = `hp-slot ${full ? 'full' : 'empty'}`;
+      slot.addEventListener('click', () => {
+        // toggle damage/heal
+        hpSlots[i] = !hpSlots[i];
+        renderHP();
+        saveToLocalStorage();
+      });
+      dom.hpContainer.appendChild(slot);
+    });
   }
 
-  // Create and append new popup with animation classes
-  const pop = document.createElement('div');
-  pop.className = `rollPopup ${rollType}`;
-  pop.textContent = message;
-  document.getElementById('popupContainer').appendChild(pop);
+  // ----- Stats Rendering with Manual Controls -----
+  function renderStats() {
+    dom.statsPanel.innerHTML = '';
+    stats.forEach(stat => {
+      const base = statBaseIndex[stat];
+      const bonus = getBonusCount(stat);
+      const idx = Math.min(base + bonus, dieSizes.length - 1);
+      const die = dieSizes[idx];
 
-  // Handle popup lifecycle - fade out after 1.5s, remove after 3s
-  setTimeout(() => {
-    pop.style.opacity = '0';
-  }, 1500);
-  setTimeout(() => {
-    pop.remove();
-  }, 3000);
-}
+      // Wrapper to hold die + optional adjust buttons
+      const wrapper = document.createElement('div');
+      wrapper.className = 'stat-die-wrapper';
 
-// 7. Handle rolling + “evolution” when a stat-die button is clicked
-async function onRoll(statName) {
-  if (statBusy[statName]) return;
-  statBusy[statName] = true;
+      // Die display
+      const div = document.createElement('div');
+      div.className = 'stat-die';
+      div.dataset.stat = stat;
+      div.dataset.dieIndex = idx;
+      div.textContent = `${stat}: D${die}`;
+      div.addEventListener('click', () => rollStat(stat));
+      wrapper.appendChild(div);
 
-
-  let total = 0;
-
-  // Compute starting effectiveIndex = base + bonus
-  let base = statBaseIndex[statName];
-  const bonusCount = getBonusCount(statName);
-  let currentIndex = Math.min(base + bonusCount, dieSizes.length - 1);
-
-  let rolling = true;
-  while (rolling) {
-    const sides = dieSizes[currentIndex];
-    const roll = Math.floor(Math.random() * sides) + 1;
-    const crit = roll === sides;
-    total += roll;
-
-    // Show the raw roll result
-    showPopup(`${statName} rolls D${sides} → ${roll}${crit ? ' (crit!)' : ''}`, 'rollResult');
-
-    if (crit) { 
-      // Case A: We are not yet at the final index (D20), so allow evolution
-      if ( currentIndex < dieSizes.length - 1) {
-        // Crit—and we can still evolve
-        base++;
-        statBaseIndex[statName] = base;
-        // Recompute effectiveIndex = new base + bonus (capped)
-        currentIndex = Math.min(base + bonusCount, dieSizes.length - 1);
-        showPopup(`⚡ ${statName} is now a D${dieSizes[currentIndex]}!`, 'rollCrit');
-        // Pause briefly so the 'evolotion' popup is visible, then continue rolling
-        await new Promise(r => setTimeout(r, 600));
-        continue; // loop again on the new/evolved die
+      // Manual adjust buttons
+      if (manualMode) {
+        dom.statsPanel.closest('.aside-bar').classList.add('manual-mode');
+        const dec = document.createElement('button');
+        dec.textContent = '-';
+        dec.className = 'stat-adjust stat-dec';
+        dec.addEventListener('click', () => {
+          if (statBaseIndex[stat] > 0) statBaseIndex[stat]--;
+          renderStats();
+        });
+        const inc = document.createElement('button');
+        inc.textContent = '+';
+        inc.className = 'stat-adjust stat-inc';
+        inc.addEventListener('click', () => {
+          if (statBaseIndex[stat] < dieSizes.length - 1) statBaseIndex[stat]++;
+          renderStats();
+        });
+        wrapper.appendChild(dec);
+        wrapper.appendChild(inc);
+      } else {
+        dom.statsPanel.closest('.aside-bar').classList.remove('manual-mode');
       }
-      // Case B: We are at max index (D20), so stop evolving, but allow re-rolling on crit
-      showPopup(`🔁 ${statName} ${roll} - CRIT! Rolling again...`, 'rollCrit');
-      await new Promise(r => setTimeout(r, 600));
-      continue;  // loop again on the same D20
-    }
-    // Not a crit, take total of roll
-    rolling = false;
+
+      dom.statsPanel.appendChild(wrapper);
+    });
   }
 
-  // Re-render so the UI updates to the new effective die
-  renderStats();
-  showPopup(`${statName} total = ${total}`, 'rollTotal');
+  // ----- Dice Rolling (respect manualMode) -----
+  async function rollStat(stat) {
+    if (statBusy[stat]) return;
+    statBusy[stat] = true;
+    let total = 0;
+    let base = statBaseIndex[stat];
+    let idx = Math.min(base + getBonusCount(stat), dieSizes.length - 1);
 
-  // Update display text
-  resultDisplay.innerHTML = `<p class="text-center">Last Roll: ${statName} = ${total}</p>`;
-  resultDisplay.className = 'show';
+    while (true) {
+      const sides = dieSizes[idx];
+      const r = Math.floor(Math.random() * sides) + 1;
+      total += r;
+      const crit = r === sides;
+      showPopup(`${stat} rolls D${sides} → ${r}${crit?' (crit!)':''}`, 'rollResult');
 
-  statBusy[statName] = false;
-}
+      // If manual mode, stop auto-evolve/re-roll on crit
+      if (manualMode || !crit) break;
 
-// A small helper to build a carousel controller object
-function makeCarousel(carouselId, hiddenInputId) {
-  const carouselEl   = document.getElementById(carouselId);
-  const carouselTrack = carouselEl.querySelector('.carousel-track');
-  const items       = carouselEl.querySelectorAll('.carousel-item');
-  const prevBtn     = carouselEl.querySelector('.carousel-nav.prev');
-  const nextBtn     = carouselEl.querySelector('.carousel-nav.next');
-  const hiddenInput = document.getElementById(hiddenInputId);
+      // Auto-evolution if not manual
+      if (idx < dieSizes.length - 1) {
+        statBaseIndex[stat] = ++base;
+        idx = Math.min(base + getBonusCount(stat), dieSizes.length - 1);
+        showPopup(`⚡${stat} evolves to D${dieSizes[idx]}!`, 'rollCrit');
+        await new Promise(r=>setTimeout(r,600));
+        continue;
+      }
+      // At max die, auto re-roll
+      showPopup(`🔁 ${stat} ${r} - CRIT!`, 'rollCrit');
+      await new Promise(r=>setTimeout(r,600));
+    }
 
-  let currentIndex = 0;  // which card is currently shown
-  let startX = 0;
-  let isDragging = false;
-
-  // Update transform, toggle arrow disable, and sync hidden value
-  function showIndex(idx) {
-    // Clamp idx between 0 and items.length - 1
-    currentIndex = Math.max(0, Math.min(idx, items.length - 1));
-    const offset = -currentIndex * 100; // percent offset
-    carouselTrack.style.transform = `translateX(${offset}%)`;
-
-    // Disable prev/next at edges
-    prevBtn.disabled = (currentIndex === 0);
-    nextBtn.disabled = (currentIndex === items.length - 1);
-
-    // Sync the hidden <input> value to this card's data-value
-    const value = items[currentIndex].getAttribute('data-value');
-    hiddenInput.value = value;
-
-    // Trigger any onchange logic (so getBonusCount(), etc., update)
-    hiddenInput.dispatchEvent(new Event('change'));
+    renderStats();
+    showPopup(`${stat} total = ${total}`, 'rollTotal');
+    dom.lastRoll.innerHTML = `<p class="text-center">Last Roll: ${stat} = ${total}</p>`;
+    dom.lastRoll.classList.add('show');
+    statBusy[stat] = false;
   }
 
-  // Attach navigation
-  prevBtn.addEventListener('click', () => showIndex(currentIndex - 1));
-  nextBtn.addEventListener('click', () => showIndex(currentIndex + 1));
+  // ----- Carousel Init -----
+  function initCarousel({ sliderId, input }) {
+    const carousel = document.getElementById(sliderId);
+    const track    = carousel.querySelector('.carousel-track');
+    const items    = track.querySelectorAll('.carousel-item');
+    const prev     = carousel.querySelector('.carousel-nav.prev');
+    const next     = carousel.querySelector('.carousel-nav.next');
+    let idx = 0, startX=0, dragging=false;
 
-  carouselEl.addEventListener('touchstart', (e) => {
-    // only consider single-finger touches
-    if (e.touches.length === 1) {
-      startX = e.touches[0].clientX;
-      isDragging = true;
+    function show(i) {
+      idx = Math.max(0, Math.min(i, items.length-1));
+      track.style.transform = `translateX(${-idx*100}%)`;
+      prev.disabled = idx===0;
+      next.disabled = idx===items.length-1;
+      input.value = items[idx].dataset.value;
+      input.dispatchEvent(new Event('change'));
     }
-  }, { passive: true });
-  carouselEl.addEventListener('touchmove', (e) => {
-    // Prevent scrolling the page when dragging horizontally
-    if (!isDragging) return;
-    const currentX = e.touches[0].clientX;
-    const deltaX = currentX - startX;
 
-    // Prevent vertical scroll while horizontal dragging
-    if (Math.abs(deltaX) > 10) {
-      e.preventDefault();
-    }
-  }, { passive: false });
+    prev.addEventListener('click',() => show(idx-1));
+    next.addEventListener('click',() => show(idx+1));
+    carousel.addEventListener('touchstart',e=>{ if(e.touches.length===1){ startX=e.touches[0].clientX; dragging=true;} },{passive:true});
+    carousel.addEventListener('touchmove',e=>{ if(!dragging)return; if(Math.abs(e.touches[0].clientX-startX)>10) e.preventDefault(); },{passive:false});
+    carousel.addEventListener('touchend',e=>{ if(!dragging)return; dragging=false; const diff=e.changedTouches[0].clientX-startX; show(idx+(diff<-40?1:diff>40?-1:0)); });
 
-  carouselEl.addEventListener('touchend', (e) => {
-    if (!isDragging) return;
-    isDragging = false;
+    show(0);
+    return { show, getIndex: () => idx };
+  }
 
-    const endX = e.changedTouches[0].clientX;
-    const diffX = endX - startX;
+  // ----- Lock & Reset UI -----
+  function updateLockUI() {
+    const bgIdx = bgCarousel ? bgCarousel.getIndex() : 0;
+    const mechIdx = mechCarousel ? mechCarousel.getIndex() : 0;
+    const canLock = !bonusesLocked && bgIdx !== 0 && mechIdx !== 0;
+    dom.lockBtn.classList.toggle('show', canLock);
+    dom.statsPanel.classList.toggle('inactive', !bonusesLocked);
+    [dom.bgSlider, dom.mechSlider].forEach(slider => slider.classList.toggle('locked', bonusesLocked));
+    dom.statsPanel.title = bonusesLocked ? '' : statsTitle;
+  }
 
-    // Reset any temporary transform and re-enable transition
-    carouselTrack.style.transition = '';
-    showIndex(currentIndex + (diffX < -40 ? 1 : diffX > 40 ? -1 : 0));
+  dom.manualToggle.addEventListener('change', e => {
+    manualMode = e.target.checked;
+    renderStats();
+  });
+
+  dom.shieldToggle.addEventListener('change', e => {
+    shieldActive = e.target.checked;
+    renderHP();
+    saveToLocalStorage();
   })
 
-  // Initialize: hide "prev" on first, set hidden input
-  showIndex(0);
-  return { showIndex, length: items.length };
-}
-
-// 8. Confirm Bonus handlers (lock dropdowns)
-lockBonuses.addEventListener('click', () => {
-  // If already locked, do nothing
-  if (bonusesLocked) return;
-
-  // Disable both selects, lock button, and show the unlock button
-  backgroundSlider.classList.add('locked');
-  mechSlider.classList.add('locked');
-  
-  statsContainer.classList.remove('inactive');
-  toggleLockButtons(true);
-  saveToLocalStorage();
-});
-
-// 9. Reset sheet handler  (resets everthing)
-resetButton.addEventListener('click', () => {
-  backgroundSlider.classList.remove('locked');
-  backgroundSelect.value = '';
-  mechSlider.classList.remove('locked');
-  mechSelect.value = '';
-  bonusesLocked = false;
-  statsContainer.classList.add('inactive');
-  statsContainer.title = statsTitle;
-  lockBonuses.classList.remove('show');
-  aetherReset.click();
-  progressMonolog.value = 0;
-  playerNameInput.value = '';
-  charNameInput.value = '';
-  rankInput.value = 'e';
-  playerNotesInput.value = '';
-
-  // Reset stat base index
-  stats.forEach(statName => {
-    statBaseIndex[statName] = 0;
-    statBusy[statName] = false;
+  dom.lockBtn.addEventListener('click', () => {
+    if (bonusesLocked) return;
+    bonusesLocked = true;
+    updateLockUI(); saveToLocalStorage();
   });
 
-  // Clear any popups on screen
-  popupContainer.innerHTML = '';
+  dom.resetBtn.addEventListener('click', () => {
+    if (!confirm('Are you sure you want to reset all character data? This cannot be undone.')) return;
+    bonusesLocked = false;
+    manualMode = false;
+    shieldActive = false;
+    hpSlots = Array(5).fill(true);
+    dom.manualToggle.checked = false;
+    dom.shieldToggle.checked = false;
+    dom.bgInput.value = '';
+    dom.mechInput.value = '';
+    valueAether = 0; valueMonolog = 0;
+    stats.forEach(s => { statBaseIndex[s] = 0; statBusy[s] = false; });
+    dom.playerName.value = dom.charName.value = dom.notes.value = '';
+    dom.rank.value = 'f';
+    dom.popupContainer.innerHTML = '';
+    dom.lastRoll.classList.remove('show'); dom.lastRoll.textContent = '';
+    updateAether(); updateMonolog(); saveToLocalStorage();
+    if (bgCarousel) bgCarousel.show(0);
+    if (mechCarousel) mechCarousel.show(0);
+    renderStats(); renderHP(); updateLockUI();
+    localStorage.removeItem('megaMechaState');
+  });
 
-  // Clear result text
-  resultDisplay.removeAttribute('class');
-  resultDisplay.innerHTML = '';
-
-  // Re-render stat dice
-  renderStats();
-  localStorage.removeItem('megaMechaState');
-});
-
-// 10. Re-render on dropdown changes
-backgroundSelect.addEventListener('change', ()=>{
-  renderStats();
-  checkBonusSelections();
-  saveToLocalStorage();
-});
-mechSelect.addEventListener('change', ()=>{
-  renderStats();
-  checkBonusSelections();
-  saveToLocalStorage();
-});
-
-// 11. Gather all user input
-function gatherAllState() {
-  return {
-    playerName: playerNameInput.value,
-    charName: charNameInput.value,
-    rank: rankInput.value,
-    notes:playerNotesInput.value,
-    aetherTokens: valueAether,
-    monolog: valueMonolog,
-    background: backgroundSelect.value,
-    mech: mechSelect.value,
-    statBaseIndex: { ...statBaseIndex },
-  };
-}
-
-function saveToLocalStorage() {
-  const allState = gatherAllState();
-  try {
-    localStorage.setItem('megaMechaState', JSON.stringify(allState));
-  }  catch (e) {
-    console.error("Failed to save to your browser storage:", e);
+  // ----- Persistence -----
+  function gatherState() {
+    return {
+      playerName: dom.playerName.value,
+      charName:   dom.charName.value,
+      rank:       dom.rank.value,
+      notes:      dom.notes.value,
+      aether:     valueAether,
+      monolog:    valueMonolog,
+      background: { value: dom.bgInput.value, index: bgCarousel ? bgCarousel.getIndex() : 0 },
+      mech:       { value: dom.mechInput.value, index: mechCarousel ? mechCarousel.getIndex() : 0 },
+      bonusesLocked,
+      statBaseIndex: {...statBaseIndex},
+      hpSlots,
+      shieldActive
+    };
   }
-}
 
-function loadFromLocalStorage() {
-  const json = localStorage.getItem('megaMechaState');
-  if (!json) return;
+  function saveToLocalStorage() {
+    localStorage.setItem('megaMechaState', JSON.stringify(gatherState()));
+  }
 
-  try {
-    const obj = JSON.parse(json);
-    if (obj.playerName != null) playerNameInput.value = obj.playerName;
-    if (obj.charName != null) charNameInput.value = obj.charName;
-    if (obj.rank != null) rankInput.value = obj.rank;
-    if (obj.notes != null)playerNotesInput.value = obj.notes;
-    if (obj.aetherTokens != null) valueAether = obj.aetherTokens;
-    if (obj.monolog != null) valueMonolog = obj.monolog;
-    updateCounterAether();
-    updateCounterMonolog();
-    if (obj.background != null) backgroundSelect.value = obj.background;
-    if (obj.mech != null) mechSelect.value = obj.mech;
-    if (obj.statBaseIndex) {
-      Object.assign(statBaseIndex, obj.statBaseIndex);
+  function loadFromLocalStorage() {
+    const json = localStorage.getItem('megaMechaState');
+    if (!json) return;
+    try {
+      const o = JSON.parse(json);
+      Object.assign(statBaseIndex, o.statBaseIndex);
+      hpSlots      = Array.isArray(o.hpSlots) ? o.hpSlots : hpSlots;
+      shieldActive = !!o.shieldActive;
+      dom.playerName.value = o.playerName;
+      dom.charName.value   = o.charName;
+      dom.rank.value       = o.rank;
+      dom.notes.value      = o.notes;
+      valueAether = o.aether;
+      valueMonolog = o.monolog;
+      bonusesLocked = o.bonusesLocked;
+      if (bgCarousel) bgCarousel.show(o.background.index || 0);
+      if (mechCarousel) mechCarousel.show(o.mech.index || 0);
+      if (shieldActive) dom.shieldToggle.checked = true;
+    } catch (e) {
+      console.error('Load error', e);
     }
-    statsContainer.classList.remove('inactive');
-    renderStats();
-    checkBonusSelections();
-
-  } catch (e) {
-    console.error("Failed to load from your browser storage:", e);
-  }
-}
-
-// 12. Initial render when the page loads
-window.addEventListener('DOMContentLoaded', () => {
-  loadFromLocalStorage();
-
-  document
-    .querySelectorAll(
-      '#playerName, #charName, #rank, #notes, #backgroundBonus, #mechBonus'
-    ).forEach(el => el.addEventListener('change', saveToLocalStorage));
-
-  const bgCarousel = makeCarousel('backgroundCarousel', 'backgroundBonus');
-  const mechCarousel = makeCarousel('mechCarousel', 'mechBonus');
-  
-  decrementAether.addEventListener('click', saveToLocalStorage);
-  incrementAether.addEventListener('click', saveToLocalStorage);
-  resetAether.addEventListener('click', saveToLocalStorage);
-  incrementMonolog.addEventListener('click', saveToLocalStorage);
-  useMonolog.addEventListener('click', saveToLocalStorage);
-
-  const originalOnroll = onRoll;
-  onRoll = async statName => {
-    await originalOnroll(statName);
-    saveToLocalStorage();
   }
 
-  renderStats();
-  updateCounterAether();
-  updateCounterMonolog();
-});
+  // ----- Initialization -----
+  document.addEventListener('DOMContentLoaded', () => {
+    // initialize carousels
+    bgCarousel  = initCarousel({ sliderId: 'backgroundCarousel', input: dom.bgInput });
+    mechCarousel= initCarousel({ sliderId: 'mechCarousel',       input: dom.mechInput });
+
+    // restore data
+    loadFromLocalStorage();
+
+    // draw UI
+    renderStats(); renderHP(); updateAether(); updateMonolog(); updateLockUI();
+
+    [dom.bgInput, dom.mechInput].forEach(el => el.addEventListener('change', () => { renderStats(); updateLockUI(); saveToLocalStorage(); }));
+    dom.aetherMinus.addEventListener('click', ()=>{ if(valueAether>0) valueAether--; updateAether(); saveToLocalStorage(); });
+    dom.aetherPlus .addEventListener('click', ()=>{ if(valueAether<200) valueAether++; updateAether(); saveToLocalStorage(); });
+    dom.aetherReset.addEventListener('click', ()=>{ valueAether=0; updateAether(); saveToLocalStorage(); });
+    dom.meterUse .addEventListener('click', ()=>{ if(valueMonolog===meterMax) valueMonolog=0; updateMonolog(); saveToLocalStorage(); });
+    dom.meterPlus.addEventListener('click', ()=>{ if(valueMonolog<meterMax) valueMonolog++; updateMonolog(); saveToLocalStorage(); });
+    const origRoll = rollStat; rollStat = async s=>{ await origRoll(s); saveToLocalStorage(); };
+  });
+})(document);

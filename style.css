@@ -27,14 +27,15 @@
     background: #fafafa;
     color: #222;
     font-family: sans-serif;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
+    width: 100%;
+    height: 100%;
+    display: block;
     align-items: center;
     justify-content: center;
   }
   
   main {
+    order: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -42,15 +43,15 @@
     padding: 1rem;            /* Add a little padding on mobile */
     line-height: 1.4;
     max-width: 500px;
-    transform: translateX(100px);
   }
 
-  aside {
-    position: fixed;
+  .aside-bar {
+    position: sticky;
     top: 0;
     bottom: 0;
     left: 0;
     display: flex;
+    /* align-content: center; */
     align-items: center;
     flex-wrap: wrap;
     width: 200px;
@@ -122,6 +123,14 @@
 
   .field-group {
     margin-bottom: 0.75rem;
+  }
+
+  .manual-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+    width: 100%;
   }
 
   /* Labels that wrap an input (.input-underline) */
@@ -373,6 +382,7 @@
     flex-wrap: wrap;
     flex-direction: column;
     justify-content: center;
+    align-self: flex-start;
     gap: 0.5rem;
     margin: 0;
 
@@ -509,65 +519,83 @@
      - Color coding by die size
      - Interactive states (hover/active)
      - Special D20 animations */
+  .stat-die-wrapper {
+    display: flex;
+    align-items: baseline;
+    flex: 1 1 40%;
+    gap: 0.25rem;
+    justify-content: center;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    width: 100%;
+    --die-bg: #e0e0e033;
+    --die-border-color: #999;
+    --die-color: #333;
+    --die-bg-hover: #d5d5d5;
+
+    [data-die-index="0"] {
+      --die-bg: #e0e0e033;
+      --dieborder-color: #999;
+      --die-color: #333;
+      --die-bg-hover: #d5d5d5;
+    }
+    /* D6 */
+    [data-die-index="1"] {
+      --die-bg: #d0f0f0;
+      --die-border-color: #5ca797;
+      --die-color: #045a55;
+      --die-bg-hover: #b0e8e8;
+    }
+    /* D8 */
+    [data-die-index="2"] {
+      --die-bg: #cce0ff;
+      --die-border-color: #4a6fb3;
+      --die-color: #233f75;
+      --die-bg-hover: #b8d4ff;
+    }
+    /* D10 */
+    [data-die-index="3"] {
+      --die-bg: #f0e0ff;
+      --die-border-color: #7a4a99;
+      --die-color: #4b1f66;
+      --die-bg-hover: #e6ccff;
+    }
+    /* D12 */
+    [data-die-index="4"] {
+      --die-bg: #fff4e0;
+      --die-border-color: #cc7a33;
+      --die-color: #663f1f;
+      --die-bg-hover: #ffeacc;
+    }
+    /* D20 */
+    [data-die-index="5"] {
+      --die-bg: #a02020;
+      --die-border-color: #ffd700;
+      --die-color: #fffacd;
+      --die-bg-hover: #0b1a1a;
+    }
+  }
   .stat-die {
     flex: 1 1 30%;          /* Attempt three per row on mid-size, shrink as needed */
-    min-width: 120px;       /* Will wrap if narrower than this */
+    min-width: 135px;       /* Will wrap if narrower than this */
     max-width: 180px;       /* Don’t let them grow too wide */
     text-align: center;
-    margin: 0.5rem;
+    background-color: var(--die-bg);
     padding: 0.75rem 1rem;
-    border: 2px solid #333;
+    border: 2px solid var(--die-border-color);
     border-radius: 4px;
-    color: #000;
+    color: var(--die-color);
     font-size: 1rem;
     cursor: pointer;
     user-select: none;
-    background-color: #f2f2f2;
     transition: background-color 0.2s, transform 0.1s;
-    /* D4 */
-    &[data-die-index="0"] {
-      background-color: #e0e0e033;
-      border-color: #999;
-      color: #333;
-      &:hover { background-color: #d5d5d5;}
-    }
-    /* D6 */
-    &[data-die-index="1"] {
-      background-color: #d0f0f0;
-      border-color: #5ca797;
-      color: #045a55;
-      &:hover { background-color: #b0e8e8;}
-    }
-    /* D8 */
-    &[data-die-index="2"] {
-      background-color: #cce0ff;
-      border-color: #4a6fb3;
-      color: #233f75;
-      &:hover { background-color: #b8d4ff;}
-    }
-    /* D10 */
-    &[data-die-index="3"] {
-      background-color: #f0e0ff;
-      border-color: #7a4a99;
-      color: #4b1f66;
-      &:hover { background-color: #e6ccff;}
-    }
-    /* D12 */
-    &[data-die-index="4"] {
-      background-color: #fff4e0;
-      border-color: #cc7a33;
-      color: #663f1f;
-      &:hover { background-color: #ffeacc;}
-    }
+    &:hover {background-color: var(--die-bg-hover)}
+
     /* D20 */
     &[data-die-index="5"] {
-      background-color: #a02020;
-      border-color: #ffd700;
-      color: #fffacd;
       box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.7);
       animation: pulseD20 2s ease-in-out infinite;
       &:hover {
-        background-color: #0b1a1a;
         box-shadow: 0 0 12px 4px rgba(255, 215, 0, 0.9);
       }
       &:active {
@@ -575,10 +603,23 @@
         box-shadow: 0 0 6px 1px rgba(255, 215, 0, 0.5);
       }
     }
+
+    &:active { transform: scale(0.95) }
   }
-  
-  .stat-die:active {
-    transform: scale(0.95);
+
+  .stat-adjust  {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 40px;
+    max-height: 40px;
+    background: #e0e0e033;
+    border-radius: 4px;
+    border: 2px solid #999;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    user-select: none;
   }
 
   #lockBonuses {
@@ -658,6 +699,44 @@
     }
   }
 
+  #hpSection {
+    border-bottom: 1px solid #ccc;
+    display: flex; gap: 0.5rem;
+    justify-content: center;
+    align-items: anchor-center;
+    width: 100vw; height: 80px;
+    padding: 0; margin: auto -0.5rem;
+  }
+
+  .hp-container {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+  }
+
+  .hp-slot {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #333;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &.full {background: #333; }
+    &.empty {background: transparent; }
+  }
+
+  .hp-section.shield-active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 80%; height: 0.5rem;
+    background: linear-gradient(to right, rgba(0 123 255 / 0.6), rgba(0 123 255 / 0.3));
+    border-radius: 1rem;
+    pointer-events: none;
+  }
+
+
   /* ------------------------------
      5. ANIMATIONS
      ------------------------------ 
@@ -691,23 +770,37 @@
      - Small screen optimizations
      - Touch-friendly interaction areas
      */
+
+  @media (min-width: 768px) {
+    body {display: flex;}
+    #hpSection {
+      order: 1;
+      width: 200px; height: min-content;
+      border-top: 1px solid #ccc;
+      border-bottom: none;
+      flex-direction: column;
+      align-self: flex-end;
+      margin: 1rem -1rem 0;
+      padding-top: 1rem;
+    }
+    .manual-toggle {
+      max-width: 200px;
+      justify-content: start;
+      align-self: flex-end;
+    }
+  }
   
-  @media (max-width: 768px) {
-    body { height: 100%; }
+  @media (max-width: 767px) {
     main {
       padding: 0.75rem;
       margin-left: auto;
-      margin-bottom: 150px;
       transform: translateX(0);
     }
 
-    aside {
-      position: fixed;
-      top: auto;
-      bottom: 0;
-      height: 175px;
+    .aside-bar {
+      height: fit-content;
       width: 100vw;
-      padding: 0.5rem;
+      padding: 0.5rem 0.5rem 1rem;
     }
 
     #stats {
@@ -749,9 +842,6 @@
 
     .stat-die {
       flex: 1 1 45%;
-      min-width: 100px;
-      max-width: 140px;
-      margin: 0.3rem;
       padding: 0.6rem 0.75rem;
       font-size: 0.95rem;
       border-radius: 4px;
@@ -804,6 +894,12 @@
     }
   }
 
+  @media (max-width: 600px) {
+    .stat-die-wrapper {
+      max-width: min-content;
+    }
+  }
+
   /* Small Screen Optimizations
      ------------------------
      Adjustments for screens under 480px:
@@ -832,7 +928,7 @@
   @media (max-width: 360px) {
     .stat-die {
       flex: 1 1 100%;
-      min-width: 0;
+      min-width: 1;
       max-width: 100%;
       margin: 0.25rem 0;
       font-size: 0.9rem;

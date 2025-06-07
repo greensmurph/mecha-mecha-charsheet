@@ -46,7 +46,8 @@
        <div class="field-group">
         <label for="rank">Rank:
           <select name="rank" id="rank">
-            <option value="e" selected>E</option>
+            <option value="f" selected>F</option>
+            <option value="e">E</option>
             <option value="d" disabled>D</option>
             <option value="c" disabled>C</option>
             <option value="b" disabled>B</option>
@@ -64,6 +65,9 @@
         <div id="backgroundCarousel" class="carousel">
           <div class="carousel-track">
             <!-- Each .carousel-item is one background card -->
+            <div class="carousel-item default-item" data-value="default">
+              <img src="/assets/img/bg-default.webp" alt="Default Background">
+            </div>
             <div class="carousel-item" data-value="Focus">
               <img src="/assets/img/bg-courier.webp" alt="Codename: Pizza Boy">
               <h3>Pizza Boy: Courier</h3>
@@ -99,7 +103,7 @@
           <button class="carousel-nav next" data-for="background">›</button>
         </div>
         <!-- hidden input to store chosen value -->
-        <input type="hidden" id="backgroundBonus" value="">
+        <input type="hidden" id="backgroundBonus" value="default">
        </section>
 
        <section id="mechCarouselWrapper" class="carousel-wrapper">
@@ -107,6 +111,9 @@
         <div id="mechCarousel" class="carousel">
           <div class="carousel-track">
             <!-- Each .carousel-item is one of background card -->
+            <div class="carousel-item default-item" data-value="default">
+              <img src="/assets/img/defaultmech.webp" alt="Default Mech">
+            </div>
             <div class="carousel-item" data-value="Focus">
               <img src="/assets/img/seer.webp" alt="Clarion-class Seer">
               <h3>Clarion-class Seer</h3>
@@ -146,7 +153,7 @@
           <button class="carousel-nav prev" data-for="mech">‹</button>
           <button class="carousel-nav next" data-for="mech">›</button>
         </div>
-        <input type="hidden" id="mechBonus" value="">
+        <input type="hidden" id="mechBonus" value="default">
        </section>
 
       <section id="notes-section">
@@ -175,7 +182,7 @@
           <button id="meterPlus" class="counter-btn">+</button>
           <span id="meterCounter">0</span>
           <button id="meterReset" class="counter-btn">Use!</button>
-          <progress id="meterProgress" value="0" max="6"></progress>
+          <progress id="meterProgress" value="0" max="5"></progress>
           <small class="counter-hint">Increase your Monolog-o-meter when you fail a check</small>
          </div>
 
@@ -192,7 +199,21 @@
     <div id="lastRoll"></div>
   </main>
 
-  <aside>
+  <aside class="aside-bar">
+    <section id="hpSection" class="hp-section">
+      <h3>HP:</h3>
+      <div id="hpContainer" class="hp-container"></div>
+      <label for="shieldToggle" class="shield-toggle">
+        <input type="checkbox" name="shieldToggle" id="shieldToggle">
+        Shield Active
+      </label>
+    </section>
+    <!-- enables editing stat die manually -->
+    <div class="field-group manual-toggle">
+      <label for="manualToggle">Modify Stat Die: 
+        <input type="checkbox" name="" id="manualToggle">
+      </label>
+    </div>
     <!-- Stat Dice Panel: Interactive dice display showing current die size for each stat
          Stats can evolve to larger die sizes through critical rolls -->
     <section id="stats">
