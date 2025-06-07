@@ -136,6 +136,7 @@
         dec.addEventListener('click', () => {
           if (statBaseIndex[stat] > 0) statBaseIndex[stat]--;
           renderStats();
+          saveToLocalStorage();
         });
         const inc = document.createElement('button');
         inc.textContent = '+';
@@ -143,6 +144,7 @@
         inc.addEventListener('click', () => {
           if (statBaseIndex[stat] < dieSizes.length - 1) statBaseIndex[stat]++;
           renderStats();
+          saveToLocalStorage();
         });
         wrapper.appendChild(dec);
         wrapper.appendChild(inc);
