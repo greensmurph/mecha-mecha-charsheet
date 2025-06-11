@@ -17,6 +17,7 @@
   <title>Mega Mecha Overdrive: EdgeLords</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="print.css" media="print" />
 </head>
 <body>
 
@@ -65,7 +66,7 @@
         <div id="backgroundCarousel" class="carousel">
           <div class="carousel-track">
             <!-- Each .carousel-item is one background card -->
-            <div class="carousel-item default-item" data-value="default">
+            <div class="carousel-item active-item" data-value="default">
               <img src="/assets/img/bg-default.webp" alt="Default Background">
             </div>
             <div class="carousel-item" data-value="Focus">
@@ -111,7 +112,7 @@
         <div id="mechCarousel" class="carousel">
           <div class="carousel-track">
             <!-- Each .carousel-item is one of background card -->
-            <div class="carousel-item default-item" data-value="default">
+            <div class="carousel-item active-item" data-value="default">
               <img src="/assets/img/defaultmech.webp" alt="Default Mech">
             </div>
             <div class="carousel-item" data-value="Focus">
@@ -193,7 +194,7 @@
       <button id="lockBonuses" class="btn">Lock Bonuses</button>
       <button id="resetButton" class="btn danger">Reset <p class="caution-mark">!</p></button>
      </section>
-     <p>Be sure to lock in your background and mech selections!</p>
+     <p class="lock-tip">Be sure to lock in your background and mech selections!</p>
      <br>
   
     <div id="lastRoll"></div>

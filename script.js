@@ -209,6 +209,8 @@
       prev.disabled = idx===0;
       next.disabled = idx===items.length-1;
       input.value = items[idx].dataset.value;
+      items.forEach(item => item.classList.remove('active-item'));
+      items[idx].classList.add('active-item');
       input.dispatchEvent(new Event('change'));
     }
 
@@ -330,7 +332,7 @@
     // draw UI
     renderStats(); renderHP(); updateAether(); updateMonolog(); updateLockUI();
 
-    [dom.bgInput, dom.mechInput].forEach(el => el.addEventListener('change', () => { renderStats(); updateLockUI(); saveToLocalStorage(); }));
+    [dom.bgInput, dom.mechInput].forEach(el => el.addEventListener('change', () => {renderStats(); updateLockUI(); saveToLocalStorage();}));
     dom.aetherMinus.addEventListener('click', ()=>{ if(valueAether>0) valueAether--; updateAether(); saveToLocalStorage(); });
     dom.aetherPlus .addEventListener('click', ()=>{ if(valueAether<200) valueAether++; updateAether(); saveToLocalStorage(); });
     dom.aetherReset.addEventListener('click', ()=>{ valueAether=0; updateAether(); saveToLocalStorage(); });

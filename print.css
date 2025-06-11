@@ -1,0 +1,285 @@
+/* ------------------------------
+     PRINT STYLES
+     ------------------------------ 
+     Print-specific styles that transform the interactive character sheet
+     into a clean, paper-friendly format:
+     - Single column layout
+     - Static display of current values
+     - Removal of interactive elements
+     - Print-optimized typography and spacing
+     */
+
+@media print {
+  /* Reset body and main layout */
+  body {
+    background: white;
+    color: black;
+    display: block;
+    height: auto;
+    padding: 20px;
+    font-size: 12pt;
+  }
+
+  main {
+    transform: none;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-areas:
+      "title title title title"
+      "charInfo charInfo charInfo ."
+      "bg bg mech mech"
+      "notes notes notes notes"
+      "tokens tokens tokens tokens";
+  }
+
+  /* Hide interactive and non-printable elements */
+  .carousel-nav,
+  .counter-btn,
+  #lockBonuses,
+  #resetButton,
+  #popupContainer,
+  #lastRoll,
+  .manual-toggle,
+  .stat-adjust {
+    display: none !important;
+  }
+
+  /* Title styling */
+  .title {
+    font-size: 18pt;
+    margin-bottom: 1cm;
+    grid-area: title;
+  }
+
+  /* Character info section */
+  #charInfo {
+    display: flex;
+    flex-direction: row;
+    grid-area: charInfo;
+    padding: 0;
+    .field-group {
+      select {
+        appearance: none;
+        -webkit-appearance: none;
+      }
+    }
+  }
+
+  /* Carousel display */
+  .carousel-wrapper {
+    max-width: fit-content;
+    page-break-inside: avoid;
+    padding-top: 0;
+    margin-top: 0;
+  }
+
+  #backgroundCarouselWrapper {
+    grid-area: bg;
+  }
+  #mechCarouselWrapper {
+    grid-area: mech;
+  }
+
+  .carousel-title,
+  .mech-title {
+    display: none;
+  }
+
+  .carousel {
+    overflow: visible;
+  }
+
+  .carousel p {
+    display: none;
+  }
+
+  /* Show only non-default carousel items */
+  .carousel .carousel-item.active-item {
+    display: block !important;
+    margin: 0.5cm 0;
+  }
+
+  .carousel-item img {
+    max-height: 3cm;
+    filter: grayscale(100%);
+  }
+
+  /* Notes section */
+  #notes-section {
+    margin: 0.5cm 0;
+    page-break-inside: avoid;
+    grid-area: notes;
+    textarea {
+      resize: none;
+    }
+  }
+
+  #notes {
+    border: 1px solid #000;
+    border: none;
+  }
+
+  /* Resource counters */
+  #counters-section {
+    margin: 0;
+    grid-area: tokens;
+    display: flex;
+    flex-direction: row;
+    height: 1cm;
+    column-gap: 2cm;
+  }
+
+  #meterProgress {
+    border: 1px solid #000;
+  }
+
+  progress {
+    display: none;
+  }
+
+  .lock-tip {
+    display: none;
+  }
+
+  /* HP Section */
+  #hpSection {
+    width: auto;
+    height: auto;
+    margin: 1cm 0;
+    padding: 0;
+    page-break-inside: avoid;
+    border: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1cm;
+  }
+
+  #hpSection h3 {
+    margin: 0;
+    grid-area: hp;
+  }
+
+  .hp-container {
+    gap: 0.2cm;
+  }
+
+  .hp-slot {
+    width: 0.5cm;
+    height: 0.5cm;
+    border: 1px solid #000;
+  }
+
+  .hp-slot.full {
+    background: #000;
+  }
+
+  /* Stats display */
+  .aside-bar {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin: 1cm 0;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+
+  #stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5cm;
+    width: 100%;
+  }
+
+  .stat-die-wrapper {
+    flex: 0 0 calc(33.33% - 0.5cm);
+    max-width: none;
+  }
+
+  .stat-die {
+    min-width: 0;
+    padding: 0.25cm;
+    margin: 0;
+    background: none;
+    border: 1px solid #00000080;
+    box-shadow: none;
+    animation: none;
+    opacity: 1 !important;
+    text-align: left;
+  }
+
+  /* General print optimizations */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure form inputs show their values */
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: black !important;
+  }
+
+  /* Show shield status */
+  .shield-toggle {
+    margin-top: 0.5cm;
+    text-align: center;
+  }
+
+  /* Counter values */
+  #aetherCounter,
+  #meterCounter {
+    display: inline-block !important;
+    padding: 0.1cm !important;
+    margin: 0 0.2cm !important;
+    min-width: 1cm !important;
+    text-align: left;
+  }
+
+  /* Hide counter hints in print */
+  .counter-hint {
+    display: none !important;
+  }
+
+  /* Progress bar */
+  progress {
+    border: 1px solid black;
+    height: 0.5cm !important;
+  }
+  progress::-webkit-progress-value {
+    background: black !important;
+  }
+  progress::-moz-progress-bar {
+    background: black !important;
+  }
+
+  /* Ensure proper page breaks */
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+
+  img {
+    page-break-inside: avoid;
+  }
+
+  /* Hide Firebase comment section */
+  script[type="module"] {
+    display: none !important;
+  }
+}
