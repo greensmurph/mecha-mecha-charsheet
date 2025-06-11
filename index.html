@@ -34,13 +34,13 @@
       <!-- Player & Character Fields: Text inputs for player name, character name, and rank selection dropdown -->
        <div class="field-group">
         <label for="playerName">Player:
-          <input type="text" id="playerName" class="input-underline" placeholder="Your name">
+          <input type="text" id="playerName" class="input-underline" placeholder="Your name" maxlength="50">
         </label>
        </div>
 
        <div class="field-group">
         <label for="charName">Character:
-          <input type="text" id="charName" class="input-underline" placeholder="Pilot name">
+          <input type="text" id="charName" class="input-underline" placeholder="Pilot name" maxlength="50">
         </label>
        </div>
 
@@ -161,7 +161,7 @@
         <!-- Character Notes: Textarea for backstory and general notes about the character -->
         <div class="field-group">
         <label for="notes">Notes / Backstory:</label>
-        <textarea id="notes" rows="3" placeholder="Notes..."></textarea>
+        <textarea id="notes" rows="3" maxlength="500" placeholder="Notes..."></textarea>
         </div>
       </section>
 

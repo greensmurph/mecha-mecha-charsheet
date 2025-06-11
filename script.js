@@ -277,11 +277,16 @@
 
   // ----- Persistence -----
   function gatherState() {
+    const cleaned = {
+      playerName: sanitizeInput(dom.playerName.value, 50),
+      charName:   sanitizeInput(dom.charName.value, 50),
+      notes:      sanitizeTextArea(dom.notes.value, 500)
+    }
     return {
-      playerName: dom.playerName.value,
-      charName:   dom.charName.value,
+      playerName: cleaned.playerName,
+      charName:   cleaned.charName,
       rank:       dom.rank.value,
-      notes:      dom.notes.value,
+      notes:      cleaned.notes,
       aether:     valueAether,
       monolog:    valueMonolog,
       background: { value: dom.bgInput.value, index: bgCarousel ? bgCarousel.getIndex() : 0 },
@@ -320,6 +325,22 @@
     }
   }
 
+  function sanitizeInput(data, max) {
+    data = data.trim();
+    data = data.replace(/<|>|&/g, '');
+    data = data.replace(/&/g, '&amp;');
+    data = data.substring(0, max);
+    return data;
+  }
+
+  function sanitizeTextArea(data, max) {
+    data = data.replace(/\n/g, ' '); // remove newline chars
+    data = data.replace(/<\?[\s\S]*?\?>/g, ''); // remove php
+    data = data.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ''); // remove JS/CSS blocks
+    data = data.replace(/<[^>]+>/g, ''); // remove html tags
+    return sanitizeInput(data, max);
+  }
+
   // ----- Initialization -----
   document.addEventListener('DOMContentLoaded', () => {
     // initialize carousels
@@ -331,7 +352,8 @@
 
     // draw UI
     renderStats(); renderHP(); updateAether(); updateMonolog(); updateLockUI();
-
+    [dom.playerName, dom.charName, dom.notes].forEach(el => el.addEventListener('blur', saveToLocalStorage));
+    dom.rank.addEventListener('change', saveToLocalStorage);
     [dom.bgInput, dom.mechInput].forEach(el => el.addEventListener('change', () => {renderStats(); updateLockUI(); saveToLocalStorage();}));
     dom.aetherMinus.addEventListener('click', ()=>{ if(valueAether>0) valueAether--; updateAether(); saveToLocalStorage(); });
     dom.aetherPlus .addEventListener('click', ()=>{ if(valueAether<200) valueAether++; updateAether(); saveToLocalStorage(); });
