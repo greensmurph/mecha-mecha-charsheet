@@ -113,6 +113,62 @@
   // ----- Stats Rendering with Manual Controls -----
   function renderStats() {
     dom.statsPanel.innerHTML = '';
+    
+    // Count dice at each level or higher
+    const diceAtLeastD6 = stats.filter(stat => {
+      const base = statBaseIndex[stat];
+      const bonus = getBonusCount(stat);
+      const idx = Math.min(base + bonus, dieSizes.length - 1);
+      return dieSizes[idx] >= 6;
+    }).length;
+
+    const diceAtLeastD8 = stats.filter(stat => {
+      const base = statBaseIndex[stat];
+      const bonus = getBonusCount(stat);
+      const idx = Math.min(base + bonus, dieSizes.length - 1);
+      return dieSizes[idx] >= 8;
+    }).length;
+
+    const diceAtLeastD10 = stats.filter(stat => {
+      const base = statBaseIndex[stat];
+      const bonus = getBonusCount(stat);
+      const idx = Math.min(base + bonus, dieSizes.length - 1);
+      return dieSizes[idx] >= 10;
+    }).length;
+
+    const diceAtLeastD12 = stats.filter(stat => {
+      const base = statBaseIndex[stat];
+      const bonus = getBonusCount(stat);
+      const idx = Math.min(base + bonus, dieSizes.length - 1);
+      return dieSizes[idx] >= 12;
+    }).length;
+
+    const diceAtD20 = stats.filter(stat => {
+      const base = statBaseIndex[stat];
+      const bonus = getBonusCount(stat);
+      const idx = Math.min(base + bonus, dieSizes.length - 1);
+      return dieSizes[idx] === 20;
+    }).length;
+
+    // Update rank based on dice levels
+    const rankSelect = dom.rank;
+    rankSelect.querySelector('option[value="e"]').disabled = diceAtLeastD6 < 4;
+    rankSelect.querySelector('option[value="d"]').disabled = diceAtLeastD8 < 4;
+    rankSelect.querySelector('option[value="c"]').disabled = diceAtLeastD10 < 4;
+    rankSelect.querySelector('option[value="b"]').disabled = diceAtLeastD12 < 4;
+    rankSelect.querySelector('option[value="a"]').disabled = diceAtD20 < 4;
+    rankSelect.querySelector('option[value="s"]').disabled = diceAtD20 < 6;
+
+    // Auto-select highest available rank
+    const ranks = ['f', 'e', 'd', 'c', 'b', 'a', 's'];
+    for (let i = ranks.length - 1; i >= 0; i--) {
+      const option = rankSelect.querySelector(`option[value="${ranks[i]}"]`);
+      if (!option.disabled) {
+        rankSelect.value = ranks[i];
+        break;
+      }
+    }
+
     stats.forEach(stat => {
       const base = statBaseIndex[stat];
       const bonus = getBonusCount(stat);

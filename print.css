@@ -157,6 +157,9 @@
     align-items: center;
     justify-content: flex-start;
     gap: 1cm;
+    &:before {
+      content: none;
+    }
   }
 
   #hpSection h3 {
@@ -208,6 +211,7 @@
     background: none;
     border: 1px solid #00000080;
     box-shadow: none;
+    color: black;
     animation: none;
     opacity: 1 !important;
     text-align: left;

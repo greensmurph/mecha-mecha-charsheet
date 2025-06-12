@@ -990,6 +990,7 @@
 
     .stat-die {
       min-width: 120px;
+      width: max-content;
       flex: 1 1 40%;
       padding: 0.5rem 0.25rem;
       font-size: 0.95rem;
