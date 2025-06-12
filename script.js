@@ -80,8 +80,8 @@
     const ctr = dom.popupContainer;
     while (ctr.children.length >= 6) ctr.removeChild(ctr.firstChild);
     ctr.appendChild(pu);
-    setTimeout(() => pu.style.opacity = 0, 4500);
-    setTimeout(() => pu.remove(), 6000);
+    setTimeout(() => pu.style.opacity = 0, 1500);
+    setTimeout(() => pu.remove(), 2000);
   };
 
   const getBonusCount = stat => {
