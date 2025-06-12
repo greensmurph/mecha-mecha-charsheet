@@ -43,7 +43,8 @@
   #popupContainer,
   #lastRoll,
   .manual-toggle,
-  .stat-adjust {
+  .stat-adjust,
+  #roll-log {
     display: none !important;
   }
 
