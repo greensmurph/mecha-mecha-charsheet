@@ -9,6 +9,11 @@
     rank:       d.getElementById('rank'),
     notes:      d.getElementById('notes'),
 
+    rollLog:    d.getElementById('roll-log'),
+    logOpen:    d.getElementById('logOpen'),
+    logClose:   d.getElementById('logClose'),
+    logContainer: d.getElementById('logTextContainer'),
+
     aetherMinus: d.getElementById('aetherMinus'),
     aetherPlus:  d.getElementById('aetherPlus'),
     aetherCount: d.getElementById('aetherCounter'),
@@ -171,6 +176,8 @@
       const crit = r === sides;
       showPopup(`${stat} rolls D${sides} → ${r}${crit?' (crit!)':''}`, 'rollResult');
 
+      dom.logContainer.innerHTML += `<p>${stat}: D${sides} → ${r}${crit?' (crit!)':''}</p>`;
+
       // If manual mode, stop auto-evolve/re-roll on crit
       if (manualMode || !crit) break;
 
@@ -179,18 +186,23 @@
         statBaseIndex[stat] = ++base;
         idx = Math.min(base + getBonusCount(stat), dieSizes.length - 1);
         showPopup(`⚡${stat} evolves to D${dieSizes[idx]}!`, 'rollCrit');
+        dom.logContainer.innerHTML += `<p>⚡${stat} evolves to D${dieSizes[idx]}!</p>`;
         await new Promise(r=>setTimeout(r,600));
         continue;
       }
       // At max die, auto re-roll
       showPopup(`🔁 ${stat} ${r} - CRIT!`, 'rollCrit');
+      dom.logContainer.innerHTML += `<p>🔁 ${stat} ${r} - CRIT!</p>`;
       await new Promise(r=>setTimeout(r,600));
     }
 
     renderStats();
     showPopup(`${stat} total = ${total}`, 'rollTotal');
+    dom.logContainer.innerHTML += `<p>${stat} total: ${total}</p>`;
     dom.lastRoll.innerHTML = `<p class="text-center">Last Roll: ${stat} = ${total}</p>`;
     dom.lastRoll.classList.add('show');
+    dom.rollLog.style.opacity = 1;
+    dom.rollLog.classList.remove('inactive');
     statBusy[stat] = false;
   }
 
@@ -268,6 +280,9 @@
     dom.rank.value = 'f';
     dom.popupContainer.innerHTML = '';
     dom.lastRoll.classList.remove('show'); dom.lastRoll.textContent = '';
+    dom.logClose.click();
+    dom.rollLog.classList.add('inactive');
+    dom.logContainer.innerHTML = '';
     updateAether(); updateMonolog(); saveToLocalStorage();
     if (bgCarousel) bgCarousel.show(0);
     if (mechCarousel) mechCarousel.show(0);
@@ -343,6 +358,21 @@
 
   // ----- Initialization -----
   document.addEventListener('DOMContentLoaded', () => {
+    // Roll log controls
+    dom.logOpen.addEventListener('click', () => {
+      if (dom.logContainer.textContent.length < 1) return;
+      dom.logContainer.classList.add('show');
+      dom.logOpen.style.display = 'none';
+      dom.logClose.style.display = 'block';
+    });
+
+    dom.logClose.addEventListener('click', () => {
+      if (dom.logContainer.textContent.length < 1) return;
+      dom.logContainer.classList.remove('show');
+      dom.logOpen.style.display = 'block';
+      dom.logClose.style.display = 'none';
+    });
+
     // initialize carousels
     bgCarousel  = initCarousel({ sliderId: 'backgroundCarousel', input: dom.bgInput });
     mechCarousel= initCarousel({ sliderId: 'mechCarousel',       input: dom.mechInput });
